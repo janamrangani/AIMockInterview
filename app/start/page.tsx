@@ -3,8 +3,24 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Company = { id: string; name: string };
+
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
 
 export default function StartPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -15,16 +31,10 @@ export default function StartPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    const supabase = getSupabase();
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.replace("/login");
-        return;
-      }
+      if (!session) { router.replace("/login"); return; }
 
       supabase
         .from("companies")
@@ -42,11 +52,7 @@ export default function StartPage() {
     setSubmitting(true);
     setError(null);
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
+    const supabase = getSupabase();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { router.replace("/login"); return; }
 
@@ -56,108 +62,53 @@ export default function StartPage() {
       .select()
       .single();
 
-    if (insertError) {
-      setError(insertError.message);
-      setSubmitting(false);
-      return;
-    }
-
+    if (insertError) { setError(insertError.message); setSubmitting(false); return; }
     router.push(`/session/${session_row.id}`);
   }
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "10px 12px",
-    border: "1px solid #ddd",
-    borderRadius: 6,
-    fontSize: 14,
-    boxSizing: "border-box",
-    fontFamily: "system-ui",
-    background: "#fff",
-  };
 
   const canSubmit = companyId && role.trim() && !submitting;
 
   return (
-    <main
-      style={{
-        maxWidth: 480,
-        margin: "80px auto",
-        padding: "0 24px",
-        fontFamily: "system-ui",
-      }}
-    >
-      <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>
-        Start a mock interview
-      </h1>
-      <p style={{ fontSize: 16, color: "#555", marginTop: 10, marginBottom: 0 }}>
-        Pick your target company and the role you're interviewing for.
-      </p>
+    <main className="max-w-lg mx-auto px-6 py-16">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Start a mock interview</h1>
+        <p className="text-muted-foreground">
+          Pick your target company and the role you're interviewing for.
+        </p>
+      </div>
 
-      <form
-        onSubmit={handleSubmit}
-        style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 20 }}
-      >
-        <div>
-          <label
-            style={{ display: "block", fontSize: 14, fontWeight: 500, marginBottom: 6 }}
-          >
-            Company
-          </label>
-          <select
-            value={companyId}
-            onChange={(e) => setCompanyId(e.target.value)}
-            required
-            style={inputStyle}
-          >
-            <option value="">Select a company</option>
-            {companies.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Company</label>
+          <Select value={companyId} onValueChange={(v) => setCompanyId(v ?? "")} required>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a company" />
+            </SelectTrigger>
+            <SelectContent>
+              {companies.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        <div>
-          <label
-            style={{ display: "block", fontSize: 14, fontWeight: 500, marginBottom: 6 }}
-          >
-            Role
-          </label>
-          <input
-            type="text"
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Role</label>
+          <Input
             value={role}
             onChange={(e) => setRole(e.target.value)}
             placeholder="e.g. SWE Intern, New Grad SWE, Product Manager"
             required
-            style={inputStyle}
           />
         </div>
 
-        {error && (
-          <p style={{ color: "#dc2626", fontSize: 14, margin: 0 }}>{error}</p>
-        )}
+        {error && <p className="text-sm text-destructive">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          style={{
-            marginTop: 4,
-            padding: "12px 16px",
-            background: "#111",
-            color: "#fff",
-            border: "none",
-            borderRadius: 6,
-            fontSize: 15,
-            fontWeight: 600,
-            cursor: canSubmit ? "pointer" : "not-allowed",
-            opacity: canSubmit ? 1 : 0.4,
-            fontFamily: "system-ui",
-          }}
-        >
+        <Button type="submit" disabled={!canSubmit} className="w-full" size="lg">
           {submitting ? "Starting…" : "Start interview →"}
-        </button>
+        </Button>
       </form>
     </main>
   );

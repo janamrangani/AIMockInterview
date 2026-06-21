@@ -3,6 +3,12 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 type Phase =
   | "loading"
@@ -46,24 +52,19 @@ export default function SessionPage({ params }: { params: { id: string } }) {
   const [isBusy, setIsBusy] = useState(false);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
 
-  // Question
   const [question, setQuestion] = useState<Question | null>(null);
   const [previousQuestions, setPreviousQuestions] = useState<string[]>([]);
   const [questionCount, setQuestionCount] = useState(0);
 
-  // Answers
   const [answer, setAnswer] = useState("");
   const [followUpQuestion, setFollowUpQuestion] = useState<string | null>(null);
   const [followUpCount, setFollowUpCount] = useState(0);
   const [followUpAnswer, setFollowUpAnswer] = useState("");
-  const [exchange, setExchange] = useState(""); // running transcript for /api/feedback
+  const [exchange, setExchange] = useState("");
 
-  // Feedback
   const [feedback, setFeedback] = useState<FeedbackData | null>(null);
-
   const [error, setError] = useState<string | null>(null);
 
-  // Load session info
   useEffect(() => {
     const supabase = getSupabase();
     supabase
@@ -72,11 +73,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
       .eq("id", sessionId)
       .single()
       .then(({ data, error: err }) => {
-        if (err || !data) {
-          setError("Session not found.");
-          setPhase("error");
-          return;
-        }
+        if (err || !data) { setError("Session not found."); setPhase("error"); return; }
         const co = data.companies as { name: string } | Array<{ name: string }>;
         const companyName = Array.isArray(co) ? co[0]?.name : co?.name;
         setSessionInfo({
@@ -88,36 +85,22 @@ export default function SessionPage({ params }: { params: { id: string } }) {
       });
   }, [sessionId]);
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
-
   async function generateQuestion(type: "behavioral" | "technical") {
     if (!sessionInfo) return;
     setPhase("generating");
     setError(null);
-
     try {
       const res = await fetch("/api/generate-question", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId,
-          companyId: sessionInfo.companyId,
-          role: sessionInfo.role,
-          type,
-          previousQuestions,
-        }),
+        body: JSON.stringify({ sessionId, companyId: sessionInfo.companyId, role: sessionInfo.role, type, previousQuestions }),
       });
       const json = await res.json();
       if (!res.ok || json.error) throw new Error(json.error ?? "Failed to generate question.");
-
       setQuestion(json.question);
       setPreviousQuestions((prev) => [...prev, json.question.prompt_text]);
       setQuestionCount((c) => c + 1);
-      setAnswer("");
-      setFollowUpCount(0);
-      setFollowUpQuestion(null);
-      setFollowUpAnswer("");
-      setExchange("");
+      setAnswer(""); setFollowUpCount(0); setFollowUpQuestion(null); setFollowUpAnswer(""); setExchange("");
       setPhase("answering");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -127,32 +110,18 @@ export default function SessionPage({ params }: { params: { id: string } }) {
 
   async function submitMainAnswer() {
     if (!question || !sessionInfo || !answer.trim()) return;
-    setIsBusy(true);
-    setError(null);
-
+    setIsBusy(true); setError(null);
     const currentExchange = `Interviewer: ${question.prompt_text}\nCandidate: ${answer}`;
-
     try {
       const res = await fetch("/api/follow-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          questionId: question.id,
-          originalQuestion: question.prompt_text,
-          userAnswer: answer,
-          companyId: sessionInfo.companyId,
-          followUpCount: 0,
-        }),
+        body: JSON.stringify({ questionId: question.id, originalQuestion: question.prompt_text, userAnswer: answer, companyId: sessionInfo.companyId, followUpCount: 0 }),
       });
       const json = await res.json();
       if (!res.ok || json.error) throw new Error(json.error ?? "Failed to process answer.");
-
       if (json.followUp) {
-        setExchange(currentExchange);
-        setFollowUpQuestion(json.followUp);
-        setFollowUpCount(1);
-        setFollowUpAnswer("");
-        setPhase("follow-up");
+        setExchange(currentExchange); setFollowUpQuestion(json.followUp); setFollowUpCount(1); setFollowUpAnswer(""); setPhase("follow-up");
       } else {
         await getFeedback(currentExchange);
       }
@@ -165,32 +134,18 @@ export default function SessionPage({ params }: { params: { id: string } }) {
 
   async function submitFollowUpAnswer() {
     if (!question || !sessionInfo || !followUpQuestion || !followUpAnswer.trim()) return;
-    setIsBusy(true);
-    setError(null);
-
+    setIsBusy(true); setError(null);
     const fullExchange = `${exchange}\nInterviewer: ${followUpQuestion}\nCandidate: ${followUpAnswer}`;
-
     try {
       const res = await fetch("/api/follow-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          questionId: question.id,
-          originalQuestion: question.prompt_text,
-          userAnswer: followUpAnswer,
-          companyId: sessionInfo.companyId,
-          followUpCount: followUpCount,
-        }),
+        body: JSON.stringify({ questionId: question.id, originalQuestion: question.prompt_text, userAnswer: followUpAnswer, companyId: sessionInfo.companyId, followUpCount }),
       });
       const json = await res.json();
       if (!res.ok || json.error) throw new Error(json.error ?? "Failed to process answer.");
-
       if (json.followUp) {
-        setExchange(fullExchange);
-        setFollowUpQuestion(json.followUp);
-        setFollowUpCount((c) => c + 1);
-        setFollowUpAnswer("");
-        // stay in follow-up phase, new question renders automatically
+        setExchange(fullExchange); setFollowUpQuestion(json.followUp); setFollowUpCount((c) => c + 1); setFollowUpAnswer("");
       } else {
         await getFeedback(fullExchange);
       }
@@ -204,23 +159,14 @@ export default function SessionPage({ params }: { params: { id: string } }) {
   async function getFeedback(exchangeText: string) {
     if (!question || !sessionInfo) return;
     setPhase("getting-feedback");
-
     try {
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId,
-          questionId: question.id,
-          companyId: sessionInfo.companyId,
-          type: question.type,
-          question: question.prompt_text,
-          answerExchange: exchangeText,
-        }),
+        body: JSON.stringify({ sessionId, questionId: question.id, companyId: sessionInfo.companyId, type: question.type, question: question.prompt_text, answerExchange: exchangeText }),
       });
       const json = await res.json();
       if (!res.ok || json.error) throw new Error(json.error ?? "Failed to get feedback.");
-
       setFeedback(json.feedback);
       setPhase("feedback");
     } catch (err: unknown) {
@@ -230,161 +176,210 @@ export default function SessionPage({ params }: { params: { id: string } }) {
   }
 
   function startNextQuestion() {
-    setQuestion(null);
-    setFeedback(null);
-    setAnswer("");
-    setFollowUpAnswer("");
-    setFollowUpQuestion(null);
-    setExchange("");
-    setError(null);
-    setPhase("select-type");
+    setQuestion(null); setFeedback(null); setAnswer(""); setFollowUpAnswer("");
+    setFollowUpQuestion(null); setExchange(""); setError(null); setPhase("select-type");
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
   if (phase === "loading") {
-    return <main style={S.main}><p style={{ color: "#888" }}>Loading…</p></main>;
+    return (
+      <main className="max-w-2xl mx-auto px-6 py-16">
+        <p className="text-muted-foreground text-sm">Loading…</p>
+      </main>
+    );
   }
 
   if (phase === "error") {
     return (
-      <main style={S.main}>
-        <p style={{ color: "#dc2626" }}>{error}</p>
-        <Link href="/start" style={{ color: "#111", fontSize: 14 }}>← Back to start</Link>
+      <main className="max-w-2xl mx-auto px-6 py-16">
+        <p className="text-destructive mb-4">{error}</p>
+        <Link href="/start" className={buttonVariants({ variant: "outline" })}>
+          ← Back to start
+        </Link>
       </main>
     );
   }
 
   return (
-    <main style={S.main}>
+    <main className="max-w-2xl mx-auto px-6 py-10">
       {/* Session header */}
-      <p style={S.header}>
-        {sessionInfo?.companyName} · {sessionInfo?.role}
-        {questionCount > 0 && ` · Q${questionCount}`}
-      </p>
+      <div className="flex items-center gap-2 mb-8 text-sm text-muted-foreground">
+        <span>{sessionInfo?.companyName}</span>
+        <span>·</span>
+        <span>{sessionInfo?.role}</span>
+        {questionCount > 0 && (
+          <>
+            <span>·</span>
+            <span>Question {questionCount}</span>
+          </>
+        )}
+      </div>
 
-      {/* ── Pick question type ── */}
+      {/* ── Pick type ── */}
       {phase === "select-type" && (
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 8px" }}>
+          <h1 className="text-2xl font-bold tracking-tight mb-2">
             {questionCount === 0 ? "Ready to start?" : "Next question"}
           </h1>
-          <p style={{ color: "#888", margin: "0 0 28px", fontSize: 15 }}>
-            Pick a question type.
-          </p>
-          <div style={{ display: "flex", gap: 12 }}>
+          <p className="text-muted-foreground mb-8">Choose a question type.</p>
+          <div className="grid grid-cols-2 gap-4">
             {(["behavioral", "technical"] as const).map((t) => (
-              <button key={t} onClick={() => generateQuestion(t)} style={S.typeButton}>
-                <span style={{ display: "block", fontWeight: 600, fontSize: 15 }}>
+              <button
+                key={t}
+                onClick={() => generateQuestion(t)}
+                className="group p-6 rounded-xl border border-border bg-card text-left hover:border-foreground/30 hover:shadow-sm transition-all duration-150"
+              >
+                <p className="font-semibold mb-1">
                   {t.charAt(0).toUpperCase() + t.slice(1)}
-                </span>
-                <span style={{ display: "block", fontSize: 12, color: "#999", marginTop: 4 }}>
+                </p>
+                <p className="text-sm text-muted-foreground">
                   {t === "behavioral" ? "Tell me about a time…" : "Coding / problem-solving"}
-                </span>
+                </p>
               </button>
             ))}
           </div>
-          {error && <p style={S.errorText}>{error}</p>}
+          {error && <p className="text-sm text-destructive mt-4">{error}</p>}
         </div>
       )}
 
-      {/* ── Generating spinner ── */}
+      {/* ── Generating ── */}
       {phase === "generating" && (
-        <p style={{ color: "#888" }}>Generating your question…</p>
+        <div className="py-8">
+          <p className="text-muted-foreground text-sm">Generating your question…</p>
+        </div>
       )}
 
-      {/* ── Main answer ── */}
+      {/* ── Answering ── */}
       {phase === "answering" && question && (
-        <div>
-          <TypeBadge type={question.type} />
-          <p style={S.questionText}>{question.prompt_text}</p>
-          <textarea
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            placeholder="Type your answer here…"
-            rows={6}
-            style={S.textarea}
-          />
-          {error && <p style={S.errorText}>{error}</p>}
-          <PrimaryButton
+        <div className="space-y-6">
+          <Badge variant="outline" className={cn(
+            "text-xs font-semibold",
+            question.type === "behavioral"
+              ? "text-blue-600 border-blue-200 bg-blue-50"
+              : "text-violet-600 border-violet-200 bg-violet-50"
+          )}>
+            {question.type}
+          </Badge>
+
+          <h2 className="text-xl font-semibold leading-relaxed">{question.prompt_text}</h2>
+
+          <Separator />
+
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-muted-foreground">Your answer</label>
+            <Textarea
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              placeholder="Type your answer here…"
+              rows={7}
+              className="resize-none text-base leading-relaxed"
+            />
+          </div>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
+          <Button
             onClick={submitMainAnswer}
             disabled={!answer.trim() || isBusy}
-            loading={isBusy}
-            label="Submit answer →"
-          />
+            size="lg"
+          >
+            {isBusy ? "Analyzing…" : "Submit answer →"}
+          </Button>
         </div>
       )}
 
       {/* ── Follow-up ── */}
       {phase === "follow-up" && question && followUpQuestion && (
-        <div>
-          {/* Greyed-out context */}
-          <p style={{ fontSize: 14, color: "#ccc", margin: "0 0 2px", lineHeight: 1.4 }}>
-            {question.prompt_text}
-          </p>
-          <p style={{ fontSize: 13, color: "#ddd", fontStyle: "italic", margin: "0 0 24px", lineHeight: 1.4 }}>
-            You: {answer.length > 120 ? answer.slice(0, 120) + "…" : answer}
-          </p>
+        <div className="space-y-6">
+          {/* Context */}
+          <div className="space-y-1 opacity-40">
+            <p className="text-sm font-medium">{question.prompt_text}</p>
+            <p className="text-sm italic text-muted-foreground line-clamp-2">
+              You: {answer}
+            </p>
+          </div>
 
-          <p style={S.questionText}>{followUpQuestion}</p>
-          <textarea
-            value={followUpAnswer}
-            onChange={(e) => setFollowUpAnswer(e.target.value)}
-            placeholder="Type your answer…"
-            rows={5}
-            style={S.textarea}
-          />
-          {error && <p style={S.errorText}>{error}</p>}
-          <PrimaryButton
+          <Separator />
+
+          <h2 className="text-xl font-semibold leading-relaxed">{followUpQuestion}</h2>
+
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-muted-foreground">Your answer</label>
+            <Textarea
+              value={followUpAnswer}
+              onChange={(e) => setFollowUpAnswer(e.target.value)}
+              placeholder="Type your answer…"
+              rows={6}
+              className="resize-none text-base leading-relaxed"
+            />
+          </div>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
+          <Button
             onClick={submitFollowUpAnswer}
             disabled={!followUpAnswer.trim() || isBusy}
-            loading={isBusy}
-            label="Submit answer →"
-          />
+            size="lg"
+          >
+            {isBusy ? "Analyzing…" : "Submit answer →"}
+          </Button>
         </div>
       )}
 
-      {/* ── Feedback spinner ── */}
+      {/* ── Getting feedback ── */}
       {phase === "getting-feedback" && (
-        <p style={{ color: "#888" }}>Analyzing your answer…</p>
+        <div className="py-8">
+          <p className="text-muted-foreground text-sm">Analyzing your answer…</p>
+        </div>
       )}
 
-      {/* ── Feedback display ── */}
+      {/* ── Feedback ── */}
       {phase === "feedback" && (
-        <div>
+        <div className="space-y-6">
           {error && !feedback && (
-            <p style={S.errorText}>{error}</p>
+            <p className="text-destructive text-sm">{error}</p>
           )}
 
           {feedback && (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24 }}>
-                <ScoreBadge score={feedback.score} />
-                <p style={{ fontSize: 15, color: "#555", margin: 0, lineHeight: 1.5 }}>
+              {/* Score + question */}
+              <div className="flex items-start gap-4">
+                <ScoreRing score={feedback.score} />
+                <p className="text-sm text-muted-foreground leading-relaxed pt-1">
                   {question?.prompt_text}
                 </p>
               </div>
 
-              <div style={feedbackCard("#f0fdf4", "#bbf7d0")}>
-                <p style={feedbackLabel("#16a34a")}>Strengths</p>
-                <p style={{ fontSize: 15, lineHeight: 1.6, margin: 0 }}>{feedback.strengths_text}</p>
-              </div>
+              <Separator />
 
-              <div style={{ ...feedbackCard("#fff5f5", "#fca5a5"), marginTop: 12 }}>
-                <p style={feedbackLabel("#dc2626")}>To improve</p>
-                <p style={{ fontSize: 15, lineHeight: 1.6, margin: 0 }}>{feedback.gaps_text}</p>
-              </div>
+              {/* Strengths */}
+              <Card className="border-emerald-200 bg-emerald-50">
+                <CardContent className="pt-4">
+                  <p className="text-xs font-bold uppercase tracking-widest text-emerald-700 mb-2">
+                    Strengths
+                  </p>
+                  <p className="text-sm leading-relaxed">{feedback.strengths_text}</p>
+                </CardContent>
+              </Card>
+
+              {/* Gaps */}
+              <Card className="border-red-200 bg-red-50">
+                <CardContent className="pt-4">
+                  <p className="text-xs font-bold uppercase tracking-widest text-red-700 mb-2">
+                    To improve
+                  </p>
+                  <p className="text-sm leading-relaxed">{feedback.gaps_text}</p>
+                </CardContent>
+              </Card>
             </>
           )}
 
-          <div style={{ display: "flex", gap: 16, alignItems: "center", marginTop: 28 }}>
-            <PrimaryButton
-              onClick={startNextQuestion}
-              disabled={false}
-              loading={false}
-              label="Next question →"
-            />
-            <Link href="/start" style={{ fontSize: 14, color: "#888", textDecoration: "none" }}>
+          <div className="flex items-center gap-4 pt-2">
+            <Button onClick={startNextQuestion} size="lg">
+              Next question →
+            </Button>
+            <Link href="/start" className={buttonVariants({ variant: "ghost" })}>
               Finish session
             </Link>
           </div>
@@ -394,143 +389,22 @@ export default function SessionPage({ params }: { params: { id: string } }) {
   );
 }
 
-// ── Shared styles ────────────────────────────────────────────────────────────
+function ScoreRing({ score }: { score: number }) {
+  const color =
+    score >= 7
+      ? "bg-emerald-500"
+      : score >= 5
+      ? "bg-amber-500"
+      : "bg-red-500";
 
-const S = {
-  main: {
-    maxWidth: 640,
-    margin: "60px auto",
-    padding: "0 24px",
-    fontFamily: "system-ui",
-  } as React.CSSProperties,
-  header: {
-    fontSize: 13,
-    color: "#aaa",
-    margin: "0 0 32px",
-  } as React.CSSProperties,
-  questionText: {
-    fontSize: 20,
-    fontWeight: 600,
-    lineHeight: 1.5,
-    margin: "12px 0 20px",
-  } as React.CSSProperties,
-  textarea: {
-    width: "100%",
-    padding: "12px",
-    border: "1px solid #ddd",
-    borderRadius: 8,
-    fontSize: 15,
-    lineHeight: 1.6,
-    fontFamily: "system-ui",
-    resize: "vertical",
-    boxSizing: "border-box",
-    display: "block",
-    marginBottom: 12,
-  } as React.CSSProperties,
-  typeButton: {
-    flex: 1,
-    padding: "16px 20px",
-    border: "1px solid #ddd",
-    borderRadius: 8,
-    background: "#fff",
-    cursor: "pointer",
-    textAlign: "left",
-    fontFamily: "system-ui",
-  } as React.CSSProperties,
-  errorText: {
-    color: "#dc2626",
-    fontSize: 14,
-    margin: "0 0 12px",
-  } as React.CSSProperties,
-};
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-function TypeBadge({ type }: { type: string }) {
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "3px 10px",
-        borderRadius: 999,
-        fontSize: 12,
-        fontWeight: 600,
-        background: type === "behavioral" ? "#eff6ff" : "#f5f3ff",
-        color: type === "behavioral" ? "#1d4ed8" : "#6d28d9",
-      }}
-    >
-      {type}
-    </span>
-  );
-}
-
-function ScoreBadge({ score }: { score: number }) {
-  const bg = score >= 7 ? "#16a34a" : score >= 5 ? "#d97706" : "#dc2626";
   return (
     <div
-      style={{
-        width: 52,
-        height: 52,
-        borderRadius: "50%",
-        background: bg,
-        color: "#fff",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontWeight: 700,
-        fontSize: 16,
-        flexShrink: 0,
-      }}
+      className={cn(
+        "w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0",
+        color
+      )}
     >
       {score}/10
     </div>
   );
-}
-
-function PrimaryButton({
-  onClick,
-  disabled,
-  loading,
-  label,
-}: {
-  onClick: () => void;
-  disabled: boolean;
-  loading: boolean;
-  label: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        padding: "11px 20px",
-        background: "#111",
-        color: "#fff",
-        border: "none",
-        borderRadius: 6,
-        fontSize: 14,
-        fontWeight: 600,
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.4 : 1,
-        fontFamily: "system-ui",
-      }}
-    >
-      {loading ? "Analyzing…" : label}
-    </button>
-  );
-}
-
-function feedbackCard(bg: string, border: string): React.CSSProperties {
-  return { padding: "16px", borderRadius: 8, border: `1px solid ${border}`, background: bg };
-}
-
-function feedbackLabel(color: string): React.CSSProperties {
-  return {
-    fontSize: 12,
-    fontWeight: 700,
-    color,
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    margin: "0 0 8px",
-  };
 }

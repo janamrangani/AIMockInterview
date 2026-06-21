@@ -2,7 +2,17 @@
 // app/login/page.tsx
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { createClient } from "@supabase/supabase-js";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -17,20 +27,16 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setInfo(null);
 
-    const supabase = getSupabaseBrowserClient();
+    const supabase = getSupabase();
 
     if (mode === "signup") {
       const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        setError(error.message);
-        setLoading(false);
-        return;
-      }
-      // If session is null, Supabase requires email confirmation before login
+      if (error) { setError(error.message); setLoading(false); return; }
       if (!data.session) {
         setLoading(false);
-        setInfo("Check your email and click the confirmation link, then sign in here.");
+        setInfo("Check your email and click the confirmation link, then sign in.");
         return;
       }
       router.push("/start");
@@ -38,127 +44,67 @@ export default function LoginPage() {
     }
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
-
+    if (error) { setError(error.message); setLoading(false); return; }
     router.push("/start");
   }
 
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "10px 12px",
-    border: "1px solid #ddd",
-    borderRadius: 6,
-    fontSize: 14,
-    boxSizing: "border-box",
-    fontFamily: "system-ui",
-  };
-
   return (
-    <main
-      style={{
-        maxWidth: 400,
-        margin: "80px auto",
-        padding: "0 24px",
-        fontFamily: "system-ui",
-      }}
-    >
-      <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>
-        AI Mock Interview
-      </h1>
-      <h2 style={{ fontSize: 20, fontWeight: 600, marginTop: 32, marginBottom: 0 }}>
-        {mode === "login" ? "Sign in" : "Create account"}
-      </h2>
+    <main className="flex items-center justify-center min-h-screen px-4 -mt-14">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">
+            {mode === "login" ? "Welcome back" : "Create account"}
+          </CardTitle>
+          <CardDescription>
+            {mode === "login"
+              ? "Sign in to continue your prep"
+              : "Start practising for free"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Email</label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                autoComplete="email"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Password</label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              />
+            </div>
 
-      <form
-        onSubmit={handleSubmit}
-        style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 16 }}
-      >
-        <div>
-          <label
-            style={{ display: "block", fontSize: 14, fontWeight: 500, marginBottom: 6 }}
-          >
-            Email
-          </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            style={inputStyle}
-          />
-        </div>
+            {info && <p className="text-sm text-emerald-600">{info}</p>}
+            {error && <p className="text-sm text-destructive">{error}</p>}
 
-        <div>
-          <label
-            style={{ display: "block", fontSize: 14, fontWeight: 500, marginBottom: 6 }}
-          >
-            Password
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete={mode === "signup" ? "new-password" : "current-password"}
-            style={inputStyle}
-          />
-        </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "…" : mode === "login" ? "Sign in" : "Sign up"}
+            </Button>
+          </form>
 
-        {info && (
-          <p style={{ color: "#16a34a", fontSize: 14, margin: 0 }}>{info}</p>
-        )}
-        {error && (
-          <p style={{ color: "#dc2626", fontSize: 14, margin: 0 }}>{error}</p>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            marginTop: 4,
-            padding: "11px 16px",
-            background: "#111",
-            color: "#fff",
-            border: "none",
-            borderRadius: 6,
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: loading ? "not-allowed" : "pointer",
-            opacity: loading ? 0.6 : 1,
-            fontFamily: "system-ui",
-          }}
-        >
-          {loading ? "…" : mode === "login" ? "Sign in" : "Sign up"}
-        </button>
-      </form>
-
-      <p style={{ marginTop: 24, fontSize: 14, color: "#555", textAlign: "center" }}>
-        {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
-        <button
-          onClick={() => {
-            setMode(mode === "login" ? "signup" : "login");
-            setError(null);
-            setInfo(null);
-          }}
-          style={{
-            background: "none",
-            border: "none",
-            color: "#111",
-            fontWeight: 600,
-            cursor: "pointer",
-            fontSize: 14,
-            padding: 0,
-            fontFamily: "system-ui",
-          }}
-        >
-          {mode === "login" ? "Sign up" : "Sign in"}
-        </button>
-      </p>
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
+            <button
+              onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(null); setInfo(null); }}
+              className="font-semibold text-foreground underline-offset-4 hover:underline"
+            >
+              {mode === "login" ? "Sign up" : "Sign in"}
+            </button>
+          </p>
+        </CardContent>
+      </Card>
     </main>
   );
 }
