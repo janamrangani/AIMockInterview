@@ -3,8 +3,30 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
+import {
+  Briefcase, Mic, HelpCircle, BookMarked, Mail, Banknote, ClipboardList,
+  Check, X, type LucideIcon,
+} from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+function IconBox({ Icon }: { Icon: LucideIcon }) {
+  return (
+    <div className="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
+      <Icon className="w-4 h-4" />
+    </div>
+  );
+}
+
+const kitDocs: { Icon: LucideIcon; title: string; desc: string }[] = [
+  { Icon: Briefcase,     title: "LinkedIn rewrite",            desc: "Headline + About section optimised for your target role." },
+  { Icon: Mic,           title: '"Tell me about yourself"',    desc: "A polished, company-calibrated opening pitch." },
+  { Icon: HelpCircle,    title: "Questions to ask",            desc: "Smart, role-specific questions that signal preparation." },
+  { Icon: BookMarked,    title: "3 STAR stories",              desc: "Structured behavioral answers with real impact framing." },
+  { Icon: Mail,          title: "Thank-you email",             desc: "Send within 24h. Keeps you top of mind." },
+  { Icon: Banknote,      title: "Salary negotiation",          desc: "Specific talking points and counter-offer language." },
+  { Icon: ClipboardList, title: "Day-of checklist",            desc: "Everything from tech setup to mindset — nothing forgotten." },
+];
 
 function getSupabase() {
   return createClient(
@@ -82,8 +104,8 @@ function NotifyMeForm() {
 
   if (state === "done") {
     return (
-      <p className="text-sm text-center text-emerald-700 font-medium py-2.5">
-        ✓ You're on the list — we'll email you when it launches.
+      <p className="text-sm text-center text-emerald-700 font-medium py-2.5 flex items-center justify-center gap-1.5">
+        <Check className="w-4 h-4" /> You're on the list — we'll email you when it launches.
       </p>
     );
   }
@@ -210,7 +232,7 @@ export default function PricingPage() {
                 "Basic scored feedback",
               ].map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm">
-                  <span className="text-emerald-500 font-bold mt-0.5 flex-shrink-0">✓</span>
+                  <Check className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
                   <span className="text-foreground">{f}</span>
                 </li>
               ))}
@@ -220,7 +242,7 @@ export default function PricingPage() {
                 "Interview Countdown Kit",
               ].map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm opacity-35">
-                  <span className="mt-0.5 flex-shrink-0">✗</span>
+                  <X className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                   <span>{f}</span>
                 </li>
               ))}
@@ -254,7 +276,7 @@ export default function PricingPage() {
             <ul className="space-y-2.5">
               {packFeatures.map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm">
-                  <span className="text-emerald-500 font-bold mt-0.5 flex-shrink-0">✓</span>
+                  <Check className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
                   <span className="text-foreground">{f}</span>
                 </li>
               ))}
@@ -290,7 +312,7 @@ export default function PricingPage() {
                 "Priority support",
               ].map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm">
-                  <span className="text-muted-foreground mt-0.5 flex-shrink-0">✓</span>
+                  <Check className="w-3.5 h-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <span className="text-muted-foreground">{f}</span>
                 </li>
               ))}
@@ -317,23 +339,12 @@ export default function PricingPage() {
           </p>
 
           <div className="grid sm:grid-cols-2 gap-4">
-            {[
-              { icon: "💼", title: "LinkedIn rewrite", desc: "Headline + About section optimised for your target role." },
-              { icon: "🗣️", title: '"Tell me about yourself"', desc: "A polished, company-calibrated opening pitch." },
-              { icon: "❓", title: "Questions to ask", desc: "Smart, role-specific questions that signal preparation." },
-              { icon: "⭐", title: "3 STAR stories", desc: "Structured behavioral answers with real impact framing." },
-              { icon: "📧", title: "Thank-you email", desc: "Send within 24h. Keeps you top of mind." },
-              { icon: "💰", title: "Salary negotiation", desc: "Specific talking points and counter-offer language." },
-              { icon: "📋", title: "Day-of checklist", desc: "Everything from tech setup to mindset — nothing forgotten." },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="flex items-start gap-4 rounded-xl bg-white border border-border p-5"
-              >
-                <span className="text-2xl flex-shrink-0">{item.icon}</span>
+            {kitDocs.map(({ Icon, title, desc }) => (
+              <div key={title} className="flex items-start gap-4 rounded-xl bg-white border border-border p-5">
+                <IconBox Icon={Icon} />
                 <div>
-                  <p className="font-semibold text-sm mb-1">{item.title}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                  <p className="font-semibold text-sm mb-1">{title}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
                 </div>
               </div>
             ))}

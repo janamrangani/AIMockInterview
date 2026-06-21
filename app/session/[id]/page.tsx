@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
+import { MessageSquare, Code2, Check, TrendingUp } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -232,21 +233,21 @@ export default function SessionPage({ params }: { params: { id: string } }) {
               onClick={() => generateQuestion("behavioral")}
               className="group p-6 rounded-2xl border-2 border-border bg-white text-left hover:border-indigo-300 hover:shadow-md hover:shadow-indigo-100 transition-all duration-200"
             >
-              <div className="text-2xl mb-3">💬</div>
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center mb-4">
+                <MessageSquare className="w-5 h-5" />
+              </div>
               <p className="font-semibold text-base mb-1">Behavioral</p>
-              <p className="text-sm text-muted-foreground">
-                Tell me about a time…
-              </p>
+              <p className="text-sm text-muted-foreground">Tell me about a time…</p>
             </button>
             <button
               onClick={() => generateQuestion("technical")}
               className="group p-6 rounded-2xl border-2 border-border bg-white text-left hover:border-indigo-300 hover:shadow-md hover:shadow-indigo-100 transition-all duration-200"
             >
-              <div className="text-2xl mb-3">💻</div>
+              <div className="w-10 h-10 rounded-xl bg-violet-50 border border-violet-100 text-violet-600 flex items-center justify-center mb-4">
+                <Code2 className="w-5 h-5" />
+              </div>
               <p className="font-semibold text-base mb-1">Technical</p>
-              <p className="text-sm text-muted-foreground">
-                Coding / problem-solving
-              </p>
+              <p className="text-sm text-muted-foreground">Coding / problem-solving</p>
             </button>
           </div>
           {error && <p className="text-sm text-destructive mt-4">{error}</p>}
@@ -374,7 +375,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
               {/* Strengths */}
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-emerald-600 text-base">✓</span>
+                  <Check className="w-4 h-4 text-emerald-600" />
                   <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">
                     Strengths
                   </p>
@@ -385,7 +386,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
               {/* Gaps */}
               <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-orange-500 text-base">↑</span>
+                  <TrendingUp className="w-4 h-4 text-orange-500" />
                   <p className="text-xs font-bold uppercase tracking-widest text-orange-700">
                     To improve
                   </p>

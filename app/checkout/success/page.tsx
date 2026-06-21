@@ -1,12 +1,13 @@
 // app/checkout/success/page.tsx
 import Link from "next/link";
+import { Sparkles } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 
 export default function CheckoutSuccessPage() {
   return (
     <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-24">
-      <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-3xl mb-6">
-        🎉
+      <div className="w-16 h-16 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center mb-6">
+        <Sparkles className="w-7 h-7 text-emerald-600" />
       </div>
       <h1 className="text-3xl font-bold tracking-tight mb-3">
         You're all set!

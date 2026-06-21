@@ -1,56 +1,62 @@
 import Link from "next/link";
+import {
+  Target, Repeat2, BarChart3, Globe,
+  Briefcase, Mic, HelpCircle, BookMarked, Mail, Banknote, ClipboardList,
+  Check, X, CheckCircle2, XCircle,
+  type LucideIcon,
+} from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 // ── Data ──────────────────────────────────────────────────────────────────
 
 const stats = [
-  { value: "4", label: "Top companies supported" },
+  { value: "4",     label: "Top companies supported" },
   { value: "< 30s", label: "To get a real question" },
-  { value: "$17", label: "One-time, no subscription" },
-  { value: "7", label: "Countdown Kit documents" },
+  { value: "$17",   label: "One-time, no subscription" },
+  { value: "7",     label: "Countdown Kit documents" },
 ];
 
 const companies = ["Amazon", "Google", "Meta", "Microsoft"];
 
 const steps = [
-  { step: "01", title: "Pick your company and role", desc: "Choose Amazon, Google, Meta, or Microsoft. Tell us the role you're targeting." },
-  { step: "02", title: "Answer a real question", desc: "Behavioral or technical — calibrated to how that company actually interviews." },
-  { step: "03", title: "Get follow-ups", desc: "AI probes deeper when your answer needs more — up to 2 rounds, like a real interviewer." },
-  { step: "04", title: "See your score and gaps", desc: "Instant 1–10 score with strengths and exactly what to say next time." },
+  { step: "01", title: "Pick your company and role",  desc: "Choose Amazon, Google, Meta, or Microsoft. Tell us the role you're targeting." },
+  { step: "02", title: "Answer a real question",       desc: "Behavioral or technical — calibrated to how that company actually interviews." },
+  { step: "03", title: "Get follow-ups",               desc: "AI probes deeper when your answer needs more — up to 2 rounds, like a real interviewer." },
+  { step: "04", title: "See your score and gaps",      desc: "Instant 1–10 score with strengths and exactly what to say next time." },
 ];
 
-const features = [
+const features: { Icon: LucideIcon; label: string; desc: string }[] = [
   {
-    icon: "🎯",
+    Icon: Target,
     label: "Company-calibrated questions",
     desc: "Not generic LeetCode. Questions tuned to each company's real style — Leadership Principles for Amazon, Googleyness for Google.",
   },
   {
-    icon: "🔁",
+    Icon: Repeat2,
     label: "Adaptive follow-ups",
     desc: "When your answer is vague or missing specifics, the AI probes deeper — just like a real interviewer would.",
   },
   {
-    icon: "📊",
+    Icon: BarChart3,
     label: "Scored, honest feedback",
     desc: "Every answer gets a 1–10 score with specific strengths and concrete gaps. No fluff. No generic praise.",
   },
   {
-    icon: "🌐",
+    Icon: Globe,
     label: "No download required",
     desc: "Runs in any browser. Open a tab, start your session, close it when you're done. Nothing to install.",
   },
 ];
 
-const countdownKit = [
-  { icon: "💼", title: "LinkedIn rewrite", desc: "Headline + About section optimised for your target role and company." },
-  { icon: "🗣️", title: '"Tell me about yourself"', desc: "A polished, company-calibrated opening pitch you can deliver cold." },
-  { icon: "❓", title: "Questions to ask", desc: "Smart, role-specific questions that make you sound prepared — because you are." },
-  { icon: "⭐", title: "3 STAR stories", desc: "Structured behavioral answers built from your own experience, impact-first." },
-  { icon: "📧", title: "Thank-you email", desc: "Send within 24h. Keeps you top of mind without sounding desperate." },
-  { icon: "💰", title: "Salary negotiation", desc: "Specific talking points and counter-offer language for your level and company." },
-  { icon: "📋", title: "Day-of checklist", desc: "Everything from tech setup to mindset. Nothing forgotten on the day." },
+const countdownKit: { Icon: LucideIcon; title: string; desc: string }[] = [
+  { Icon: Briefcase,     title: "LinkedIn rewrite",            desc: "Headline + About section optimised for your target role and company." },
+  { Icon: Mic,           title: '"Tell me about yourself"',    desc: "A polished, company-calibrated opening pitch you can deliver cold." },
+  { Icon: HelpCircle,    title: "Questions to ask",            desc: "Smart, role-specific questions that make you sound prepared — because you are." },
+  { Icon: BookMarked,    title: "3 STAR stories",              desc: "Structured behavioral answers built from your own experience, impact-first." },
+  { Icon: Mail,          title: "Thank-you email",             desc: "Send within 24h. Keeps you top of mind without sounding desperate." },
+  { Icon: Banknote,      title: "Salary negotiation",          desc: "Specific talking points and counter-offer language for your level and company." },
+  { Icon: ClipboardList, title: "Day-of checklist",            desc: "Everything from tech setup to mindset. Nothing forgotten on the day." },
 ];
 
 const testimonials = [
@@ -97,6 +103,21 @@ const faqs = [
     a: "No. InterviewAI runs entirely in your browser. Open a tab, start your session, done.",
   },
 ];
+
+// ── Shared icon container styles ──────────────────────────────────────────
+
+function IconBox({ Icon, dark = false }: { Icon: LucideIcon; dark?: boolean }) {
+  return (
+    <div className={cn(
+      "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
+      dark
+        ? "bg-indigo-500/10 border border-indigo-500/20 text-indigo-400"
+        : "bg-indigo-50 border border-indigo-100 text-indigo-600"
+    )}>
+      <Icon className="w-5 h-5" />
+    </div>
+  );
+}
 
 // ── Page ──────────────────────────────────────────────────────────────────
 
@@ -146,7 +167,6 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Stats strip */}
           <div className="w-full max-w-2xl grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.06] rounded-2xl overflow-hidden border border-white/[0.06]">
             {stats.map((s) => (
               <div key={s.label} className="bg-zinc-950 px-5 py-5 text-center">
@@ -157,7 +177,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Company strip */}
         <div className="relative border-t border-white/[0.06] px-6 py-4">
           <div className="max-w-6xl mx-auto flex items-center justify-center gap-2 flex-wrap">
             <span className="text-xs text-zinc-600 mr-2">Calibrated for</span>
@@ -179,7 +198,6 @@ export default function Home() {
           <div className="grid sm:grid-cols-3 gap-6">
             {testimonials.map((t) => (
               <div key={t.name} className="rounded-2xl border border-border bg-white p-6 flex flex-col gap-5">
-                {/* Stars */}
                 <div className="flex gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <svg key={i} className="w-4 h-4 text-amber-400 fill-amber-400" viewBox="0 0 20 20">
@@ -212,81 +230,72 @@ export default function Home() {
           </h2>
 
           <div className="grid sm:grid-cols-3 gap-4">
-            {/* LeetCode / generic */}
+            {/* Generic prep */}
             <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6">
               <div className="flex items-center gap-3 mb-5">
-                <span className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-base">❌</span>
+                <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                  <XCircle className="w-4 h-4 text-red-400" />
+                </div>
                 <p className="font-semibold text-white text-sm">Generic prep sites</p>
               </div>
-              <ul className="space-y-3 text-sm text-zinc-500">
-                <li className="flex items-start gap-2">
-                  <span className="text-red-500 mt-0.5 flex-shrink-0">✗</span>
-                  Same questions for every company
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-500 mt-0.5 flex-shrink-0">✗</span>
-                  No follow-ups, no dynamic pressure
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-500 mt-0.5 flex-shrink-0">✗</span>
-                  No feedback on your actual answers
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-500 mt-0.5 flex-shrink-0">✗</span>
-                  You don't know what a 7/10 answer looks like
-                </li>
+              <ul className="space-y-3">
+                {[
+                  "Same questions for every company",
+                  "No follow-ups, no dynamic pressure",
+                  "No feedback on your actual answers",
+                  "You don't know what a 7/10 answer looks like",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm text-zinc-500">
+                    <X className="w-3.5 h-3.5 text-red-500 mt-0.5 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
               </ul>
             </div>
 
-            {/* Human mock interviews */}
+            {/* Human mocks */}
             <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6">
               <div className="flex items-center gap-3 mb-5">
-                <span className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-base">❌</span>
+                <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                  <XCircle className="w-4 h-4 text-red-400" />
+                </div>
                 <p className="font-semibold text-white text-sm">Human mock interviews</p>
               </div>
-              <ul className="space-y-3 text-sm text-zinc-500">
-                <li className="flex items-start gap-2">
-                  <span className="text-red-500 mt-0.5 flex-shrink-0">✗</span>
-                  $100–$200 per session
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-500 mt-0.5 flex-shrink-0">✗</span>
-                  Hard to schedule, requires coordination
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-500 mt-0.5 flex-shrink-0">✗</span>
-                  Feedback quality varies wildly
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-500 mt-0.5 flex-shrink-0">✗</span>
-                  Not available at 11pm the night before
-                </li>
+              <ul className="space-y-3">
+                {[
+                  "$100–$200 per session",
+                  "Hard to schedule, requires coordination",
+                  "Feedback quality varies wildly",
+                  "Not available at 11pm the night before",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm text-zinc-500">
+                    <X className="w-3.5 h-3.5 text-red-500 mt-0.5 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
               </ul>
             </div>
 
             {/* InterviewAI */}
             <div className="rounded-2xl border border-indigo-500/30 bg-indigo-500/[0.05] p-6">
               <div className="flex items-center gap-3 mb-5">
-                <span className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-base">✅</span>
+                <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
+                  <CheckCircle2 className="w-4 h-4 text-indigo-400" />
+                </div>
                 <p className="font-semibold text-white text-sm">InterviewAI</p>
               </div>
-              <ul className="space-y-3 text-sm text-zinc-300">
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-0.5 flex-shrink-0">✓</span>
-                  Questions calibrated per company + role
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-0.5 flex-shrink-0">✓</span>
-                  Adaptive follow-ups that probe your gaps
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-0.5 flex-shrink-0">✓</span>
-                  Scored feedback with specific improvement points
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-0.5 flex-shrink-0">✓</span>
-                  Available now, in your browser, for $17
-                </li>
+              <ul className="space-y-3">
+                {[
+                  "Questions calibrated per company + role",
+                  "Adaptive follow-ups that probe your gaps",
+                  "Scored feedback with specific improvement points",
+                  "Available now, in your browser, for $17",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm text-zinc-300">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
@@ -330,9 +339,9 @@ export default function Home() {
                 </p>
               </div>
               <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.05] p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-semibold bg-amber-400/15 text-amber-300 px-2 py-0.5 rounded-full">Follow-up</span>
-                </div>
+                <span className="text-xs font-semibold bg-amber-400/15 text-amber-300 px-2 py-0.5 rounded-full mb-2 inline-block">
+                  Follow-up
+                </span>
                 <p className="text-sm font-medium text-white leading-relaxed">
                   What was the measurable outcome of shipping on time — and what would have happened if you'd missed it?
                 </p>
@@ -393,13 +402,11 @@ export default function Home() {
             Built different from every prep tool you've tried
           </h2>
           <div className="grid sm:grid-cols-2 gap-4">
-            {features.map((f) => (
-              <div key={f.label} className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-6 hover:bg-white/[0.05] transition-colors">
-                <div className="w-11 h-11 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xl mb-4">
-                  {f.icon}
-                </div>
-                <p className="font-semibold mb-2 text-white">{f.label}</p>
-                <p className="text-sm text-zinc-400 leading-relaxed">{f.desc}</p>
+            {features.map(({ Icon, label, desc }) => (
+              <div key={label} className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-6 hover:bg-white/[0.05] transition-colors">
+                <IconBox Icon={Icon} dark />
+                <p className="font-semibold mt-4 mb-2 text-white">{label}</p>
+                <p className="text-sm text-zinc-400 leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
@@ -420,30 +427,26 @@ export default function Home() {
             Each one written before you walk in, not after.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            {countdownKit.map((doc, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {countdownKit.map(({ Icon, title, desc }, i) => (
               <div
-                key={doc.title}
+                key={title}
                 className={cn(
                   "rounded-2xl border border-border bg-white p-5 flex items-start gap-4",
-                  // 7th card — span full on mobile, centered on lg
                   i === 6 && "sm:col-span-2 lg:col-span-1"
                 )}
               >
-                <span className="text-2xl flex-shrink-0 mt-0.5">{doc.icon}</span>
+                <IconBox Icon={Icon} />
                 <div>
-                  <p className="font-semibold text-sm mb-1">{doc.title}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{doc.desc}</p>
+                  <p className="font-semibold text-sm mb-1">{title}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
                 </div>
               </div>
             ))}
           </div>
 
           <div className="flex justify-center">
-            <Link
-              href="/pricing"
-              className={cn(buttonVariants({ size: "lg" }), "shadow-md shadow-indigo-100")}
-            >
+            <Link href="/pricing" className={cn(buttonVariants({ size: "lg" }), "shadow-md shadow-indigo-100")}>
               Get all 7 documents — $17 →
             </Link>
           </div>
@@ -464,22 +467,22 @@ export default function Home() {
           </p>
 
           <div className="grid sm:grid-cols-3 gap-5 mb-10">
-            {/* Free */}
             <div className="rounded-2xl border border-border bg-white p-6 flex flex-col">
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Free</p>
               <p className="text-3xl font-bold mb-1">$0</p>
               <p className="text-sm text-muted-foreground mb-6">2 sessions/month · No card needed</p>
-              <ul className="space-y-2 text-sm text-muted-foreground flex-1 mb-6">
-                <li className="flex gap-2"><span className="text-emerald-500 font-bold">✓</span>2 mock sessions/month</li>
-                <li className="flex gap-2"><span className="text-emerald-500 font-bold">✓</span>All 4 companies</li>
-                <li className="flex gap-2"><span className="text-emerald-500 font-bold">✓</span>Scored feedback</li>
+              <ul className="space-y-2.5 text-sm text-muted-foreground flex-1 mb-6">
+                {["2 mock sessions/month", "All 4 companies", "Scored feedback"].map((f) => (
+                  <li key={f} className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />{f}
+                  </li>
+                ))}
               </ul>
               <Link href="/login" className={cn(buttonVariants({ variant: "outline" }), "w-full justify-center")}>
                 Start Free
               </Link>
             </div>
 
-            {/* Interview Pack */}
             <div className="rounded-2xl border-2 border-indigo-500 bg-white p-6 flex flex-col relative shadow-xl shadow-indigo-100">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-semibold px-3.5 py-1 rounded-full whitespace-nowrap">
                 Most Popular
@@ -488,17 +491,18 @@ export default function Home() {
               <p className="text-3xl font-bold mb-1">$17</p>
               <p className="text-xs text-indigo-600 font-semibold mb-1">One-time payment</p>
               <p className="text-sm text-muted-foreground mb-6">5 sessions · 30 days · all 7 Kit docs</p>
-              <ul className="space-y-2 text-sm flex-1 mb-6">
-                <li className="flex gap-2"><span className="text-emerald-500 font-bold">✓</span>5 mock sessions (30 days)</li>
-                <li className="flex gap-2"><span className="text-emerald-500 font-bold">✓</span>Full feedback + follow-ups</li>
-                <li className="flex gap-2"><span className="text-emerald-500 font-bold">✓</span>All 7 Countdown Kit docs</li>
+              <ul className="space-y-2.5 text-sm flex-1 mb-6">
+                {["5 mock sessions (30 days)", "Full feedback + follow-ups", "All 7 Countdown Kit docs"].map((f) => (
+                  <li key={f} className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />{f}
+                  </li>
+                ))}
               </ul>
               <Link href="/pricing" className={cn(buttonVariants(), "w-full justify-center shadow-md shadow-indigo-200")}>
                 Get the Pack →
               </Link>
             </div>
 
-            {/* Unlimited */}
             <div className="rounded-2xl border border-border bg-white p-6 flex flex-col opacity-60">
               <div className="flex items-center gap-2 mb-4">
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Unlimited</p>
@@ -506,9 +510,12 @@ export default function Home() {
               </div>
               <p className="text-3xl font-bold mb-1">$19</p>
               <p className="text-sm text-muted-foreground mb-6">Per month · Everything, forever</p>
-              <ul className="space-y-2 text-sm text-muted-foreground flex-1 mb-6">
-                <li className="flex gap-2"><span className="font-bold">✓</span>Unlimited sessions</li>
-                <li className="flex gap-2"><span className="font-bold">✓</span>Everything in Pack</li>
+              <ul className="space-y-2.5 text-sm text-muted-foreground flex-1 mb-6">
+                {["Unlimited sessions", "Everything in Pack"].map((f) => (
+                  <li key={f} className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 flex-shrink-0" />{f}
+                  </li>
+                ))}
               </ul>
               <Link href="/pricing" className={cn(buttonVariants({ variant: "outline" }), "w-full justify-center")}>
                 Join waitlist →
@@ -535,15 +542,10 @@ export default function Home() {
           </h2>
           <div className="space-y-1">
             {faqs.map((faq) => (
-              <details
-                key={faq.q}
-                className="group border-b border-border last:border-0"
-              >
+              <details key={faq.q} className="group border-b border-border last:border-0">
                 <summary className="flex items-center justify-between py-5 cursor-pointer list-none gap-4">
                   <span className="font-semibold text-sm sm:text-base">{faq.q}</span>
-                  <span className="text-muted-foreground flex-shrink-0 text-lg leading-none transition-transform group-open:rotate-45">
-                    +
-                  </span>
+                  <span className="text-muted-foreground flex-shrink-0 text-lg leading-none transition-transform group-open:rotate-45">+</span>
                 </summary>
                 <div className="pb-5 -mt-1">
                   <p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
@@ -567,16 +569,10 @@ export default function Home() {
             Pick your company, answer a question, get real feedback. You'll know where you stand in under 2 minutes.
           </p>
           <div className="flex items-center gap-3 flex-wrap justify-center">
-            <Link
-              href="/pricing"
-              className={cn(buttonVariants({ size: "lg" }), "shadow-lg shadow-indigo-500/30")}
-            >
+            <Link href="/pricing" className={cn(buttonVariants({ size: "lg" }), "shadow-lg shadow-indigo-500/30")}>
               Get the Interview Pack — $17 →
             </Link>
-            <Link
-              href="/login"
-              className="inline-flex items-center h-11 px-6 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-colors"
-            >
+            <Link href="/login" className="inline-flex items-center h-11 px-6 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-colors">
               Try free first
             </Link>
           </div>
