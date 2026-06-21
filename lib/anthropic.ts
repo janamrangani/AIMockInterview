@@ -15,7 +15,7 @@ export async function callClaude(
   options?: { model?: string; maxTokens?: number }
 ): Promise<string> {
   const response = await anthropic.messages.create({
-    model: options?.model ?? "claude-sonnet-4-6",
+    model: options?.model ?? "claude-haiku-4-5-20251001",
     max_tokens: options?.maxTokens ?? 600,
     messages: [{ role: "user", content: prompt }],
   });
