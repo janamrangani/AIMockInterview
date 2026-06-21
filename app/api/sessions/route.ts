@@ -39,6 +39,18 @@ export async function POST(req: NextRequest) {
     }
 
     const plan = profile?.plan ?? "free";
+
+    // Admin plan — no caps, no expiry checks
+    if (plan === "admin") {
+      const { data: session, error: insertErr } = await supabase
+        .from("sessions")
+        .insert({ user_id: user.id, company_id: companyId, role: role.trim() })
+        .select()
+        .single();
+      if (insertErr) throw insertErr;
+      return NextResponse.json({ session });
+    }
+
     const packExpires = profile?.pack_expires_at ? new Date(profile.pack_expires_at) : null;
     const packActive = plan === "pack" && packExpires && packExpires > new Date();
 
