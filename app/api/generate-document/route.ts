@@ -7,9 +7,33 @@ import { getSupabaseServerClient } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, type, companyId, role, userInput } = await req.json();
+    const { type, companyId, role, userInput, accessToken } = await req.json();
 
     const supabase = getSupabaseServerClient();
+
+    // Verify user from access token
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(accessToken);
+    if (authErr || !user) {
+      return NextResponse.json({ error: "Unauthenticated." }, { status: 401 });
+    }
+
+    // Check plan — kit is pack/admin only
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plan, pack_expires_at")
+      .eq("id", user.id)
+      .single();
+
+    const plan = profile?.plan ?? "free";
+    const packExpires = profile?.pack_expires_at ? new Date(profile.pack_expires_at) : null;
+    const hasAccess =
+      plan === "admin" ||
+      (plan === "pack" && packExpires && packExpires > new Date());
+
+    if (!hasAccess) {
+      return NextResponse.json({ error: "Interview Pack required." }, { status: 403 });
+    }
+
     const { data: company, error } = await supabase
       .from("companies")
       .select("name, interview_style_notes")
@@ -21,12 +45,12 @@ export async function POST(req: NextRequest) {
     }
 
     const prompt = buildCountdownKitPrompt(type, company, role, userInput);
-    const outputText = await callClaude(prompt, { maxTokens: 500 });
+    const outputText = await callClaude(prompt, { maxTokens: 800 });
 
     const { data: doc, error: insertError } = await supabase
       .from("generated_documents")
       .insert({
-        user_id: userId,
+        user_id: user.id,
         type,
         input_text: userInput,
         output_text: outputText.trim(),

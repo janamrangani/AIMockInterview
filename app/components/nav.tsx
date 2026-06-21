@@ -84,6 +84,17 @@ export default function Nav() {
               History
             </Link>
             <Link
+              href="/kit"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                pathname === "/kit"
+                  ? "text-foreground font-medium"
+                  : "text-muted-foreground"
+              )}
+            >
+              Kit
+            </Link>
+            <Link
               href="/pricing"
               className={cn(
                 buttonVariants({ variant: "ghost", size: "sm" }),
