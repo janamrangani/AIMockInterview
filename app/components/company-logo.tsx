@@ -5,32 +5,25 @@ import { cn } from "@/lib/utils";
 // ── Individual logos ──────────────────────────────────────────────────────
 
 function AmazonLogo() {
-  // Bold "a" lettermark + the iconic smile-arrow underneath
+  // Amazon's actual app icon: just the smile arrow on orange
   return (
-    <div className="flex flex-col items-center justify-center gap-0.5">
-      <span
-        className="text-white font-black leading-none select-none"
-        style={{ fontSize: "22px", fontFamily: "Georgia, 'Times New Roman', serif" }}
-      >
-        a
-      </span>
-      {/* Smile arrow */}
-      <svg viewBox="0 0 30 10" fill="none" className="w-5 h-2">
-        <path
-          d="M2 5 Q15 11 28 5"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <path
-          d="M23 2.5 L28 5 L23 7.5"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </div>
+    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
+      <path
+        d="M8 22 Q20 32 32 22"
+        stroke="white"
+        strokeWidth="3"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M26 17 L32 22 L26 26"
+        stroke="white"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
   );
 }
 
