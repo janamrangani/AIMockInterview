@@ -106,7 +106,7 @@ create policy "Users can view own feedback" on feedback
 -- ── Profiles: plan tracking (free | pack) ────────────────────────────────
 create table profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  plan text not null default 'free' check (plan in ('free', 'pack')),
+  plan text not null default 'free' check (plan in ('free', 'pack', 'admin')),
   pack_purchased_at timestamptz,
   pack_expires_at   timestamptz,
   created_at        timestamptz default now()
