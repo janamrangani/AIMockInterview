@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -28,20 +29,19 @@ export default function StartPage() {
   const [role, setRole] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [capReached, setCapReached] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const supabase = getSupabase();
-
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) { router.replace("/login"); return; }
-
       supabase
         .from("companies")
         .select("id, name")
         .order("name")
-        .then(({ data, error }) => {
-          if (error) setError(`Could not load companies: ${error.message}`);
+        .then(({ data, error: err }) => {
+          if (err) setError(`Could not load companies: ${err.message}`);
           else setCompanies(data ?? []);
         });
     });
@@ -51,19 +51,36 @@ export default function StartPage() {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+    setCapReached(false);
 
     const supabase = getSupabase();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { router.replace("/login"); return; }
 
-    const { data: session_row, error: insertError } = await supabase
-      .from("sessions")
-      .insert({ user_id: session.user.id, company_id: companyId, role: role.trim() })
-      .select()
-      .single();
+    const res = await fetch("/api/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        companyId,
+        role: role.trim(),
+        accessToken: session.access_token,
+      }),
+    });
 
-    if (insertError) { setError(insertError.message); setSubmitting(false); return; }
-    router.push(`/session/${session_row.id}`);
+    const json = await res.json();
+
+    if (!res.ok) {
+      if (json.error === "free_cap_reached" || json.error === "pack_cap_reached" || json.error === "pack_expired") {
+        setCapReached(true);
+        setError(json.message);
+      } else {
+        setError(json.message ?? json.error ?? "Something went wrong.");
+      }
+      setSubmitting(false);
+      return;
+    }
+
+    router.push(`/session/${json.session.id}`);
   }
 
   const canSubmit = companyId && role.trim() && !submitting;
@@ -104,7 +121,24 @@ export default function StartPage() {
           />
         </div>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && (
+          <div className={capReached
+            ? "rounded-lg border border-amber-200 bg-amber-50 p-4"
+            : ""
+          }>
+            <p className={`text-sm ${capReached ? "text-amber-800" : "text-destructive"}`}>
+              {error}
+            </p>
+            {capReached && (
+              <Link
+                href="/pricing"
+                className="text-sm font-semibold text-amber-900 underline underline-offset-2 mt-1 inline-block"
+              >
+                Get the Interview Pack →
+              </Link>
+            )}
+          </div>
+        )}
 
         <Button type="submit" disabled={!canSubmit} className="w-full" size="lg">
           {submitting ? "Starting…" : "Start interview →"}

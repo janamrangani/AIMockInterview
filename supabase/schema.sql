@@ -103,7 +103,44 @@ create policy "Users can view own feedback" on feedback
     )
   );
 
--- Seed a few starter companies
+-- ── Profiles: plan tracking (free | pack) ────────────────────────────────
+create table profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  plan text not null default 'free' check (plan in ('free', 'pack')),
+  pack_purchased_at timestamptz,
+  pack_expires_at   timestamptz,
+  created_at        timestamptz default now()
+);
+
+alter table profiles enable row level security;
+
+create policy "Users can view own profile" on profiles
+  for select using (auth.uid() = id);
+
+-- Service role (used in API routes) bypasses RLS automatically.
+
+-- Auto-create a profile row when a new user signs up
+create or replace function handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id) values (new.id)
+  on conflict (id) do nothing;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure handle_new_user();
+
+-- ── Waitlist: email capture for the Unlimited plan ────────────────────────
+create table waitlist (
+  id         uuid primary key default gen_random_uuid(),
+  email      text not null unique,
+  created_at timestamptz default now()
+);
+
+-- ── Seed a few starter companies
 insert into companies (name, slug, interview_style_notes) values
 ('Amazon', 'amazon', 'Amazon interviews are structured around the 16 Leadership Principles. Expect "Tell me about a time..." behavioral questions with a strong bar for ownership, customer obsession, and data-driven decisions. Technical questions emphasize coding fundamentals (arrays, strings, trees, graphs) and clean, working code over cleverness.'),
 ('Google', 'google', 'Google interviews emphasize general cognitive ability, coding fundamentals, and "Googleyness" (collaboration, comfort with ambiguity). Behavioral questions probe how you handle ambiguity and work with others. Technical questions favor strong algorithmic fundamentals and clear communication of approach.'),
