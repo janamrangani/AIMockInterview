@@ -7,6 +7,7 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import CompanyLogo from "@/app/components/company-logo";
 
 type SessionRow = {
   id: string;
@@ -42,10 +43,16 @@ function formatDate(iso: string): string {
   });
 }
 
-function ScoreRing({ score }: { score: number }) {
-  const color = score >= 7 ? "bg-emerald-500" : score >= 5 ? "bg-amber-500" : "bg-red-500";
+function ScoreBadge({ score }: { score: number }) {
+  const [bg, text] =
+    score >= 7
+      ? ["bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200", ""]
+      : score >= 5
+      ? ["bg-amber-100 text-amber-700 ring-1 ring-amber-200", ""]
+      : ["bg-red-100 text-red-700 ring-1 ring-red-200", ""];
+
   return (
-    <div className={cn("w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0", color)}>
+    <div className={cn("flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums", bg, text)}>
       {score}/10
     </div>
   );
@@ -87,7 +94,13 @@ export default function HistoryPage() {
         </Link>
       </div>
 
-      {loading && <p className="text-muted-foreground text-sm">Loading…</p>}
+      {loading && (
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-[72px] rounded-xl border border-border bg-muted/30 animate-pulse" />
+          ))}
+        </div>
+      )}
 
       {!loading && sessions.length === 0 && (
         <div className="text-center py-20 text-muted-foreground">
@@ -100,29 +113,26 @@ export default function HistoryPage() {
       )}
 
       {!loading && sessions.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {sessions.map((s) => {
             const score = avgScore(s.feedback);
+            const name = companyName(s.companies);
             const questionCount = s.feedback.length;
+
             return (
               <Link key={s.id} href={`/session/${s.id}`} className="block group">
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-foreground/20 hover:shadow-sm transition-all duration-150">
-                  <div className="flex-shrink-0">
-                    {score !== null ? (
-                      <ScoreRing score={score} />
-                    ) : (
-                      <div className="w-11 h-11 rounded-full border-2 border-dashed border-border flex items-center justify-center">
-                        <span className="text-xs text-muted-foreground">—</span>
-                      </div>
-                    )}
-                  </div>
+                <div className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-border bg-white hover:border-indigo-200 hover:shadow-sm hover:shadow-indigo-50 transition-all duration-150">
 
+                  {/* Company logo */}
+                  <CompanyLogo name={name} size="md" />
+
+                  {/* Main content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      <span className="font-semibold text-sm">{companyName(s.companies)}</span>
-                      <span className="text-muted-foreground text-sm">· {s.role}</span>
+                    <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                      <span className="font-semibold text-sm">{name}</span>
+                      <span className="text-muted-foreground text-sm truncate">· {s.role}</span>
                       {s.status === "in_progress" && (
-                        <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs py-0">
+                        <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs py-0 px-1.5">
                           In progress
                         </Badge>
                       )}
@@ -133,9 +143,17 @@ export default function HistoryPage() {
                     </p>
                   </div>
 
-                  <span className="text-muted-foreground group-hover:text-foreground transition-colors text-sm flex-shrink-0">
-                    →
-                  </span>
+                  {/* Score + arrow */}
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    {score !== null ? (
+                      <ScoreBadge score={score} />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">No score</span>
+                    )}
+                    <span className="text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all text-sm">
+                      →
+                    </span>
+                  </div>
                 </div>
               </Link>
             );
