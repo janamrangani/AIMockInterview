@@ -5,33 +5,32 @@ import { cn } from "@/lib/utils";
 // ── Individual logos ──────────────────────────────────────────────────────
 
 function AmazonLogo() {
+  // Bold "a" lettermark + the iconic smile-arrow underneath
   return (
-    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
-      {/* Wordmark-style "a" */}
-      <path
-        d="M20 8C15.08 8 11 10.91 11 14.5C11 16.86 12.56 18.97 15.25 20.13C14.95 21.03 14.73 21.97 14.73 22.93C14.73 24.27 15.2 25.47 16 26.4C13.17 26.69 11 28.39 11 30.5C11 32.99 14.13 35 18 35C21.87 35 25 32.99 25 30.5C25 28.97 24.05 27.63 22.57 26.8C22.86 26.2 23 25.58 23 24.97C23 24.11 22.72 23.26 22.24 22.5C24.58 21.29 26 18.98 26 16.5C26 16.18 25.97 15.87 25.92 15.57L28 14.5L26 13C24.62 10.06 22.47 8 20 8Z"
-        fill="white"
-        opacity="0.95"
-      />
+    <div className="flex flex-col items-center justify-center gap-0.5">
+      <span
+        className="text-white font-black leading-none select-none"
+        style={{ fontSize: "22px", fontFamily: "Georgia, 'Times New Roman', serif" }}
+      >
+        a
+      </span>
       {/* Smile arrow */}
-      <path
-        d="M12 31.5C14.5 33.5 17.5 34.5 21 34C24 33.5 27 32 29.5 29.5"
-        stroke="white"
-        strokeWidth="2"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.9"
-      />
-      <path
-        d="M27 28.5L29.5 29.5L28 32"
-        stroke="white"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-        opacity="0.9"
-      />
-    </svg>
+      <svg viewBox="0 0 30 10" fill="none" className="w-5 h-2">
+        <path
+          d="M2 5 Q15 11 28 5"
+          stroke="white"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <path
+          d="M23 2.5 L28 5 L23 7.5"
+          stroke="white"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
   );
 }
 
