@@ -166,9 +166,9 @@ export default function HistoryPage() {
                   </div>
                 )}
 
-                <Link href={s.status === "completed" ? `/review/${s.id}` : `/session/${s.id}`} className="block">
-                  <div className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-border bg-white hover:border-indigo-200 hover:shadow-sm hover:shadow-indigo-50 transition-all duration-150">
+                <div className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-border bg-white hover:border-indigo-200 hover:shadow-sm hover:shadow-indigo-50 transition-all duration-150">
 
+                  <Link href={s.status === "completed" ? `/review/${s.id}` : `/session/${s.id}`} className="flex items-center gap-4 flex-1 min-w-0">
                     <CompanyLogo name={name} size="md" />
 
                     <div className="flex-1 min-w-0">
@@ -186,28 +186,27 @@ export default function HistoryPage() {
                         {questionCount > 0 && ` · ${questionCount} question${questionCount !== 1 ? "s" : ""}`}
                       </p>
                     </div>
+                  </Link>
 
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      {score !== null ? (
-                        <ScoreBadge score={score} />
-                      ) : (
-                        <span className="text-xs text-muted-foreground">No score</span>
-                      )}
-                      <span className="text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all text-sm">
-                        →
-                      </span>
-                    </div>
+                  {/* Score + arrow + delete */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {score !== null ? (
+                      <ScoreBadge score={score} />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">No score</span>
+                    )}
+                    <Link href={s.status === "completed" ? `/review/${s.id}` : `/session/${s.id}`}>
+                      <span className="text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all text-sm px-1">→</span>
+                    </Link>
+                    <button
+                      onClick={() => setConfirmDelete(s.id)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-50 hover:text-red-500 text-muted-foreground"
+                      title="Delete session"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                </Link>
-
-                {/* Delete button — visible on hover */}
-                <button
-                  onClick={(e) => { e.preventDefault(); setConfirmDelete(s.id); }}
-                  className="absolute right-14 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-50 hover:text-red-500 text-muted-foreground"
-                  title="Delete session"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                </div>
               </div>
             );
           })}
