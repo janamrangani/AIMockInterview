@@ -130,9 +130,10 @@ function SpotifyLogo() {
 }
 
 function AdobeLogo() {
+  // Clean bold "A" triangle shape
   return (
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
-      <path d="M13.966 22.624l-1.69-4.281H8.122l3.892-9.144 5.662 13.425zM8.867 1.376H.5l8.367 19.925zM15.133 1.376h8.367L15.133 21.3z" fill="white"/>
+      <path d="M12 3L2 21h4.5l1.8-4.5h7.4L17.5 21H22L12 3zm0 5.5l2.6 6.5H9.4L12 8.5z" fill="white"/>
     </svg>
   );
 }
@@ -148,25 +149,19 @@ function NvidiaLogo() {
 
 function GoldmanSachsLogo() {
   return (
-    <svg viewBox="0 0 32 20" xmlns="http://www.w3.org/2000/svg" className="w-7">
-      <text x="0" y="16" fontFamily="serif" fontSize="16" fontWeight="bold" fill="white" letterSpacing="1">GS</text>
-    </svg>
+    <div className="text-white font-bold text-sm tracking-wide leading-none">GS</div>
   );
 }
 
 function JPMorganLogo() {
   return (
-    <svg viewBox="0 0 32 20" xmlns="http://www.w3.org/2000/svg" className="w-7">
-      <text x="0" y="16" fontFamily="serif" fontSize="15" fontWeight="bold" fill="white" letterSpacing="0.5">JP</text>
-    </svg>
+    <div className="text-white font-bold text-sm tracking-wide leading-none">JP</div>
   );
 }
 
 function McKinseyLogo() {
   return (
-    <svg viewBox="0 0 32 20" xmlns="http://www.w3.org/2000/svg" className="w-7">
-      <text x="0" y="16" fontFamily="serif" fontSize="14" fontWeight="bold" fill="white" letterSpacing="0.5">Mc</text>
-    </svg>
+    <div className="text-white font-bold text-sm tracking-wide leading-none">Mc</div>
   );
 }
 
