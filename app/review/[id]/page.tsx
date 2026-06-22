@@ -54,6 +54,8 @@ function getSupabase() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
 function companyName(s: SessionData): string {
   if (s.custom_company_name) return s.custom_company_name;
   const co = s.companies;
@@ -190,52 +192,28 @@ export default function ReviewPage({ params }: { params: { id: string } }) {
     supabase.auth.getSession().then(async ({ data: { session: authSession } }) => {
       if (!authSession) { router.replace("/login"); return; }
 
-      // Fetch session
-      const { data: sessionData, error: sessionErr } = await supabase
-        .from("sessions")
-        .select("id, role, status, started_at, custom_company_name, companies(name)")
-        .eq("id", sessionId)
-        .single();
+      const res = await fetch(
+        `/api/review?sessionId=${sessionId}&accessToken=${authSession.access_token}`
+      );
+      const json = await res.json();
 
-      if (sessionErr || !sessionData) {
-        setError("Session not found.");
+      if (!res.ok) {
+        setError(json.error ?? "Failed to load session.");
         setLoading(false);
         return;
       }
 
-      // Fetch questions, answers, feedback in parallel
-      const [{ data: qs }, { data: ans }, { data: fb }] = await Promise.all([
-        supabase.from("questions").select("id, type, prompt_text, order_index").eq("session_id", sessionId).order("order_index"),
-        supabase.from("answers").select("id, question_id, user_answer_text, is_followup, created_at").in("question_id",
-          // will be requeried after we have question ids — placeholder
-          ["00000000-0000-0000-0000-000000000000"]
-        ),
-        supabase.from("feedback").select("question_id, score, strengths_text, gaps_text").eq("session_id", sessionId),
-      ]);
+      const questionList = (json.questions ?? []) as Question[];
+      const answerList = (json.answers ?? []) as Answer[];
+      const feedbackList = (json.feedback ?? []) as Feedback[];
 
-      const questionList = (qs ?? []) as Question[];
-
-      // Fetch answers properly now that we have question IDs
-      let answerList: Answer[] = [];
-      if (questionList.length > 0) {
-        const { data: answers } = await supabase
-          .from("answers")
-          .select("id, question_id, user_answer_text, is_followup, created_at")
-          .in("question_id", questionList.map((q) => q.id))
-          .order("created_at");
-        answerList = (answers ?? []) as Answer[];
-      }
-
-      const feedbackList = (fb ?? []) as Feedback[];
-
-      // Combine
       const combined: QuestionWithData[] = questionList.map((q) => ({
         ...q,
         answers: answerList.filter((a) => a.question_id === q.id),
         feedback: feedbackList.find((f) => f.question_id === q.id) ?? null,
       }));
 
-      setSession(sessionData as SessionData);
+      setSession(json.session as SessionData);
       setQuestions(combined);
       setLoading(false);
     });
