@@ -123,7 +123,7 @@ export default function HistoryPage() {
             const questionCount = s.feedback.length;
 
             return (
-              <Link key={s.id} href={`/session/${s.id}`} className="block group">
+              <Link key={s.id} href={s.status === "completed" ? `/review/${s.id}` : `/session/${s.id}`} className="block group">
                 <div className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-border bg-white hover:border-indigo-200 hover:shadow-sm hover:shadow-indigo-50 transition-all duration-150">
 
                   {/* Company logo */}

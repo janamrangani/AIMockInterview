@@ -1,6 +1,7 @@
 "use client";
 // app/session/[id]/page.tsx
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { MessageSquare, Code2, Check, TrendingUp, Mic, MicOff, Square } from "lucide-react";
@@ -230,6 +231,7 @@ function getSupabase() {
 export default function SessionPage({ params }: { params: { id: string } }) {
   const sessionId = params.id;
 
+  const router = useRouter();
   const [phase, setPhase] = useState<Phase>("loading");
   const [isBusy, setIsBusy] = useState(false);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
@@ -368,6 +370,15 @@ export default function SessionPage({ params }: { params: { id: string } }) {
   function startNextQuestion() {
     setQuestion(null); setFeedback(null); setAnswer(""); setFollowUpAnswer("");
     setFollowUpQuestion(null); setExchange(""); setError(null); setPhase("select-type");
+  }
+
+  async function endSession() {
+    const supabase = getSupabase();
+    await supabase
+      .from("sessions")
+      .update({ status: "completed", completed_at: new Date().toISOString() })
+      .eq("id", sessionId);
+    router.push(`/review/${sessionId}`);
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -639,13 +650,13 @@ export default function SessionPage({ params }: { params: { id: string } }) {
             </>
           )}
 
-          <div className="flex items-center gap-3 pt-2">
+          <div className="flex items-center gap-3 pt-2 flex-wrap">
             <Button onClick={startNextQuestion} size="lg">
               Next question →
             </Button>
-            <Link href="/history" className={buttonVariants({ variant: "outline" })}>
-              View history
-            </Link>
+            <Button variant="outline" onClick={endSession}>
+              End &amp; review
+            </Button>
             <Link href="/start" className={buttonVariants({ variant: "ghost" })}>
               Finish
             </Link>
