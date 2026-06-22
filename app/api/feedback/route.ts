@@ -11,6 +11,25 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabaseServerClient();
 
+    // Check plan — free users get score only, no strengths/gaps
+    const { data: sessionData } = await supabase
+      .from("sessions")
+      .select("user_id")
+      .eq("id", sessionId)
+      .single();
+
+    let isPaid = false;
+    if (sessionData) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("plan, pack_expires_at")
+        .eq("id", sessionData.user_id)
+        .single();
+      const plan = profile?.plan ?? "free";
+      const expires = profile?.pack_expires_at ? new Date(profile.pack_expires_at) : null;
+      isPaid = plan === "admin" || (plan === "pack" && !!expires && expires > new Date());
+    }
+
     let company: { name: string; interview_style_notes: string } | null = null;
     if (customCompanyName) {
       company = { name: customCompanyName, interview_style_notes: "" };
@@ -33,7 +52,6 @@ export async function POST(req: NextRequest) {
     try {
       parsed = JSON.parse(raw.trim());
     } catch {
-      // Model occasionally wraps JSON in text despite instructions — extract it
       const match = raw.match(/\{[\s\S]*\}/);
       parsed = match ? JSON.parse(match[0]) : { score: null, strengths: "", gaps: raw };
     }
@@ -44,8 +62,9 @@ export async function POST(req: NextRequest) {
         session_id: sessionId,
         question_id: questionId,
         score: parsed.score,
-        strengths_text: parsed.strengths,
-        gaps_text: parsed.gaps,
+        // Only store strengths/gaps for paid users
+        strengths_text: isPaid ? parsed.strengths : null,
+        gaps_text: isPaid ? parsed.gaps : null,
       })
       .select()
       .single();

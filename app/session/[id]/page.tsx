@@ -307,7 +307,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
       const res = await fetch("/api/follow-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questionId: question.id, originalQuestion: question.prompt_text, userAnswer: answer, companyId: sessionInfo.companyId, followUpCount: 0, customCompanyName: sessionInfo.customCompanyName }),
+        body: JSON.stringify({ sessionId, questionId: question.id, originalQuestion: question.prompt_text, userAnswer: answer, companyId: sessionInfo.companyId, followUpCount: 0, customCompanyName: sessionInfo.customCompanyName }),
       });
       const json = await res.json();
       if (!res.ok || json.error) throw new Error(json.error ?? "Failed to process answer.");
@@ -332,7 +332,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
       const res = await fetch("/api/follow-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questionId: question.id, originalQuestion: question.prompt_text, userAnswer: followUpAnswer, companyId: sessionInfo.companyId, followUpCount, customCompanyName: sessionInfo.customCompanyName }),
+        body: JSON.stringify({ sessionId, questionId: question.id, originalQuestion: question.prompt_text, userAnswer: followUpAnswer, companyId: sessionInfo.companyId, followUpCount, customCompanyName: sessionInfo.customCompanyName }),
       });
       const json = await res.json();
       if (!res.ok || json.error) throw new Error(json.error ?? "Failed to process answer.");

@@ -6,9 +6,32 @@ import { getSupabaseServerClient } from "@/lib/supabase";
 
 const MAX_FOLLOWUPS = 2;
 
+async function getPlanForSession(supabase: ReturnType<typeof getSupabaseServerClient>, sessionId: string): Promise<string> {
+  const { data } = await supabase
+    .from("sessions")
+    .select("user_id")
+    .eq("id", sessionId)
+    .single();
+  if (!data) return "free";
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("plan, pack_expires_at")
+    .eq("id", data.user_id)
+    .single();
+
+  if (!profile) return "free";
+  if (profile.plan === "admin") return "admin";
+  if (profile.plan === "pack") {
+    const expires = profile.pack_expires_at ? new Date(profile.pack_expires_at) : null;
+    return expires && expires > new Date() ? "pack" : "free";
+  }
+  return "free";
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { questionId, originalQuestion, userAnswer, companyId, followUpCount, customCompanyName } =
+    const { questionId, sessionId, originalQuestion, userAnswer, companyId, followUpCount, customCompanyName } =
       await req.json();
 
     if (followUpCount >= MAX_FOLLOWUPS) {
@@ -16,6 +39,21 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = getSupabaseServerClient();
+
+    // Save the user's answer first
+    await supabase.from("answers").insert({
+      question_id: questionId,
+      user_answer_text: userAnswer,
+      is_followup: followUpCount > 0,
+    });
+
+    // Free users don't get follow-ups
+    if (sessionId) {
+      const plan = await getPlanForSession(supabase, sessionId);
+      if (plan === "free") {
+        return NextResponse.json({ followUp: null });
+      }
+    }
 
     let company: { name: string; interview_style_notes: string } | null = null;
     if (customCompanyName) {
@@ -31,13 +69,6 @@ export async function POST(req: NextRequest) {
       }
       company = data;
     }
-
-    // Save the user's answer first
-    await supabase.from("answers").insert({
-      question_id: questionId,
-      user_answer_text: userAnswer,
-      is_followup: followUpCount > 0,
-    });
 
     const prompt = buildFollowUpPrompt(
       company,
