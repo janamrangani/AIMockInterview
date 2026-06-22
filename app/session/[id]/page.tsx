@@ -62,6 +62,106 @@ function useSpeechRecognition(onTranscript: (text: string) => void) {
   return { listening, supported, start, stop };
 }
 
+// ── Language selector ─────────────────────────────────────────────────────────
+
+const LANGUAGES = ["Python", "JavaScript", "Java", "C++"] as const;
+type Language = (typeof LANGUAGES)[number];
+
+const LANG_PLACEHOLDER: Record<Language, string> = {
+  Python:     "# Write your Python solution here\ndef solution():\n    pass",
+  JavaScript: "// Write your JavaScript solution here\nfunction solution() {\n  \n}",
+  Java:       "// Write your Java solution here\nclass Solution {\n    public void solve() {\n        \n    }\n}",
+  "C++":      "// Write your C++ solution here\n#include <iostream>\nusing namespace std;\n\nvoid solution() {\n    \n}",
+};
+
+// ── IDE-style code editor ─────────────────────────────────────────────────────
+
+function CodeEditor({ value, onChange, language }: {
+  value: string;
+  onChange: (v: string) => void;
+  language: Language;
+}) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const linesRef = useRef<HTMLDivElement>(null);
+  const lines = value ? value.split("\n") : [""];
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    const ta = e.currentTarget;
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      const next = value.substring(0, start) + "  " + value.substring(end);
+      onChange(next);
+      requestAnimationFrame(() => {
+        if (textareaRef.current) {
+          textareaRef.current.selectionStart = start + 2;
+          textareaRef.current.selectionEnd = start + 2;
+        }
+      });
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const start = ta.selectionStart;
+      const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+      const currentLine = value.substring(lineStart, start);
+      const indent = currentLine.match(/^(\s*)/)?.[1] ?? "";
+      const next = value.substring(0, start) + "\n" + indent + value.substring(ta.selectionEnd);
+      onChange(next);
+      requestAnimationFrame(() => {
+        if (textareaRef.current) {
+          const pos = start + 1 + indent.length;
+          textareaRef.current.selectionStart = pos;
+          textareaRef.current.selectionEnd = pos;
+        }
+      });
+    }
+  }
+
+  function syncScroll(e: React.UIEvent<HTMLTextAreaElement>) {
+    if (linesRef.current) linesRef.current.scrollTop = e.currentTarget.scrollTop;
+  }
+
+  return (
+    <div className="rounded-xl overflow-hidden border border-zinc-700 bg-[#1e1e1e] text-sm font-mono">
+      {/* Title bar */}
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#2d2d2d] border-b border-zinc-700">
+        <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+        <span className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
+        <span className="w-3 h-3 rounded-full bg-[#28c840]" />
+        <span className="ml-2 text-xs text-zinc-400">solution.{language === "Python" ? "py" : language === "JavaScript" ? "js" : language === "Java" ? "java" : "cpp"}</span>
+      </div>
+      {/* Editor */}
+      <div className="flex relative" style={{ minHeight: 280, maxHeight: 480 }}>
+        {/* Line numbers */}
+        <div
+          ref={linesRef}
+          className="overflow-hidden select-none text-right text-xs text-zinc-600 leading-6 py-4 px-3 bg-[#1e1e1e] border-r border-zinc-800 flex-shrink-0"
+          style={{ minWidth: "3rem" }}
+        >
+          {lines.map((_, i) => (
+            <div key={i}>{i + 1}</div>
+          ))}
+        </div>
+        {/* Textarea */}
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onScroll={syncScroll}
+          spellCheck={false}
+          autoCapitalize="off"
+          autoCorrect="off"
+          placeholder={LANG_PLACEHOLDER[language]}
+          className="flex-1 py-4 px-4 bg-transparent text-zinc-100 leading-6 text-sm resize-none outline-none overflow-auto"
+          style={{ minHeight: 280, maxHeight: 480, tabSize: 2 }}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ── Mic button component ──────────────────────────────────────────────────────
 
 function MicButton({ listening, supported, onStart, onStop }: {
@@ -146,6 +246,8 @@ export default function SessionPage({ params }: { params: { id: string } }) {
 
   const [feedback, setFeedback] = useState<FeedbackData | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [language, setLanguage] = useState<Language>("Python");
 
   const mainMic = useSpeechRecognition(useCallback((t) => setAnswer(t), []));
   const followMic = useSpeechRecognition(useCallback((t) => setFollowUpAnswer(t), []));
@@ -369,30 +471,56 @@ export default function SessionPage({ params }: { params: { id: string } }) {
             </p>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-muted-foreground">Your answer</label>
-              <MicButton
-                listening={mainMic.listening}
-                supported={mainMic.supported}
-                onStart={mainMic.start}
-                onStop={mainMic.stop}
-              />
+          {question.type === "technical" ? (
+            <div className="space-y-3">
+              {/* Language selector */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-muted-foreground mr-1">Language:</span>
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => setLanguage(lang)}
+                    className={cn(
+                      "px-3 py-1 rounded-md text-xs font-medium transition-all border",
+                      language === lang
+                        ? "bg-indigo-600 text-white border-indigo-600"
+                        : "bg-transparent text-muted-foreground border-border hover:border-indigo-300 hover:text-foreground"
+                    )}
+                  >
+                    {lang}
+                  </button>
+                ))}
+              </div>
+              {/* Code editor */}
+              <CodeEditor value={answer} onChange={setAnswer} language={language} />
             </div>
-            <Textarea
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Type your answer here, or use the mic button to speak."
-              rows={8}
-              className={cn("resize-none text-base leading-relaxed", mainMic.listening && "border-red-300 ring-1 ring-red-200")}
-            />
-            {mainMic.listening && (
-              <p className="text-xs text-red-500 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block" />
-                Listening… speak your answer
-              </p>
-            )}
-          </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-muted-foreground">Your answer</label>
+                <MicButton
+                  listening={mainMic.listening}
+                  supported={mainMic.supported}
+                  onStart={mainMic.start}
+                  onStop={mainMic.stop}
+                />
+              </div>
+              <Textarea
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="Type your answer here, or use the mic button to speak."
+                rows={8}
+                className={cn("resize-none text-base leading-relaxed", mainMic.listening && "border-red-300 ring-1 ring-red-200")}
+              />
+              {mainMic.listening && (
+                <p className="text-xs text-red-500 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block" />
+                  Listening… speak your answer
+                </p>
+              )}
+            </div>
+          )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
