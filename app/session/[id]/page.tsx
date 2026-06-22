@@ -1,15 +1,95 @@
 "use client";
 // app/session/[id]/page.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
-import { MessageSquare, Code2, Check, TrendingUp } from "lucide-react";
+import { MessageSquare, Code2, Check, TrendingUp, Mic, MicOff, Square } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+
+// ── Speech recognition hook ───────────────────────────────────────────────────
+
+function useSpeechRecognition(onTranscript: (text: string) => void) {
+  const [listening, setListening] = useState(false);
+  const [supported, setSupported] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    setSupported(!!SpeechRecognition);
+  }, []);
+
+  const start = useCallback(() => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    let finalTranscript = "";
+
+    recognition.onresult = (e: any) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalTranscript += t + " ";
+        else interim = t;
+      }
+      onTranscript(finalTranscript + interim);
+    };
+
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => setListening(false);
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setListening(true);
+  }, [onTranscript]);
+
+  const stop = useCallback(() => {
+    recognitionRef.current?.stop();
+    setListening(false);
+  }, []);
+
+  return { listening, supported, start, stop };
+}
+
+// ── Mic button component ──────────────────────────────────────────────────────
+
+function MicButton({ listening, supported, onStart, onStop }: {
+  listening: boolean;
+  supported: boolean;
+  onStart: () => void;
+  onStop: () => void;
+}) {
+  if (!supported) return null;
+  return (
+    <button
+      type="button"
+      onClick={listening ? onStop : onStart}
+      className={cn(
+        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+        listening
+          ? "bg-red-50 border border-red-200 text-red-600 animate-pulse"
+          : "bg-muted border border-border text-muted-foreground hover:text-foreground hover:border-indigo-300"
+      )}
+    >
+      {listening ? (
+        <><Square className="w-3 h-3 fill-red-500 stroke-none" /> Stop recording</>
+      ) : (
+        <><Mic className="w-3 h-3" /> Use mic</>
+      )}
+    </button>
+  );
+}
 
 type Phase =
   | "loading"
@@ -67,6 +147,9 @@ export default function SessionPage({ params }: { params: { id: string } }) {
   const [feedback, setFeedback] = useState<FeedbackData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const mainMic = useSpeechRecognition(useCallback((t) => setAnswer(t), []));
+  const followMic = useSpeechRecognition(useCallback((t) => setFollowUpAnswer(t), []));
+
   useEffect(() => {
     const supabase = getSupabase();
     supabase
@@ -113,6 +196,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
 
   async function submitMainAnswer() {
     if (!question || !sessionInfo || !answer.trim()) return;
+    mainMic.stop();
     setIsBusy(true); setError(null);
     const currentExchange = `Interviewer: ${question.prompt_text}\nCandidate: ${answer}`;
     try {
@@ -137,6 +221,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
 
   async function submitFollowUpAnswer() {
     if (!question || !sessionInfo || !followUpQuestion || !followUpAnswer.trim()) return;
+    followMic.stop();
     setIsBusy(true); setError(null);
     const fullExchange = `${exchange}\nInterviewer: ${followUpQuestion}\nCandidate: ${followUpAnswer}`;
     try {
@@ -285,14 +370,28 @@ export default function SessionPage({ params }: { params: { id: string } }) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">Your answer</label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-muted-foreground">Your answer</label>
+              <MicButton
+                listening={mainMic.listening}
+                supported={mainMic.supported}
+                onStart={mainMic.start}
+                onStop={mainMic.stop}
+              />
+            </div>
             <Textarea
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Type your answer here. Be specific — use real examples, metrics, and outcomes."
+              placeholder="Type your answer here, or use the mic button to speak."
               rows={8}
-              className="resize-none text-base leading-relaxed"
+              className={cn("resize-none text-base leading-relaxed", mainMic.listening && "border-red-300 ring-1 ring-red-200")}
             />
+            {mainMic.listening && (
+              <p className="text-xs text-red-500 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block" />
+                Listening… speak your answer
+              </p>
+            )}
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
@@ -327,14 +426,28 @@ export default function SessionPage({ params }: { params: { id: string } }) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">Your answer</label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-muted-foreground">Your answer</label>
+              <MicButton
+                listening={followMic.listening}
+                supported={followMic.supported}
+                onStart={followMic.start}
+                onStop={followMic.stop}
+              />
+            </div>
             <Textarea
               value={followUpAnswer}
               onChange={(e) => setFollowUpAnswer(e.target.value)}
               placeholder="Go deeper — add the specific detail or outcome they're probing for."
               rows={6}
-              className="resize-none text-base leading-relaxed"
+              className={cn("resize-none text-base leading-relaxed", followMic.listening && "border-red-300 ring-1 ring-red-200")}
             />
+            {followMic.listening && (
+              <p className="text-xs text-red-500 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block" />
+                Listening… speak your answer
+              </p>
+            )}
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
