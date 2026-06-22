@@ -374,10 +374,13 @@ export default function SessionPage({ params }: { params: { id: string } }) {
 
   async function endSession() {
     const supabase = getSupabase();
-    await supabase
-      .from("sessions")
-      .update({ status: "completed", completed_at: new Date().toISOString() })
-      .eq("id", sessionId);
+    const { data: { session: authSession } } = await supabase.auth.getSession();
+    if (!authSession) return;
+    await fetch("/api/sessions/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, accessToken: authSession.access_token }),
+    });
     router.push(`/review/${sessionId}`);
   }
 
