@@ -14,6 +14,7 @@ type SessionRow = {
   role: string;
   status: string;
   started_at: string;
+  custom_company_name: string | null;
   companies: { name: string } | Array<{ name: string }>;
   feedback: Array<{ score: number | null }>;
 };
@@ -25,7 +26,9 @@ function getSupabase() {
   );
 }
 
-function companyName(co: SessionRow["companies"]): string {
+function companyName(s: SessionRow): string {
+  if (s.custom_company_name) return s.custom_company_name;
+  const co = s.companies;
   return (Array.isArray(co) ? co[0]?.name : co?.name) ?? "—";
 }
 
@@ -69,7 +72,7 @@ export default function HistoryPage() {
       if (!session) { router.replace("/login"); return; }
       supabase
         .from("sessions")
-        .select("id, role, status, started_at, companies(name), feedback(score)")
+        .select("id, role, status, started_at, custom_company_name, companies(name), feedback(score)")
         .order("started_at", { ascending: false })
         .then(({ data }) => {
           setSessions((data as SessionRow[]) ?? []);
@@ -116,7 +119,7 @@ export default function HistoryPage() {
         <div className="space-y-2.5">
           {sessions.map((s) => {
             const score = avgScore(s.feedback);
-            const name = companyName(s.companies);
+            const name = companyName(s);
             const questionCount = s.feedback.length;
 
             return (

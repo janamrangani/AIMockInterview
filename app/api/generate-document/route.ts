@@ -7,7 +7,7 @@ import { getSupabaseServerClient } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {
-    const { type, companyId, role, userInput, accessToken } = await req.json();
+    const { type, companyId, role, userInput, accessToken, customCompanyName } = await req.json();
 
     const supabase = getSupabaseServerClient();
 
@@ -34,14 +34,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Interview Pack required." }, { status: 403 });
     }
 
-    const { data: company, error } = await supabase
-      .from("companies")
-      .select("name, interview_style_notes")
-      .eq("id", companyId)
-      .single();
-
-    if (error || !company) {
-      return NextResponse.json({ error: "Company not found" }, { status: 404 });
+    let company: { name: string; interview_style_notes: string } | null = null;
+    if (customCompanyName) {
+      company = { name: customCompanyName, interview_style_notes: "" };
+    } else {
+      const { data, error } = await supabase
+        .from("companies")
+        .select("name, interview_style_notes")
+        .eq("id", companyId)
+        .single();
+      if (error || !data) {
+        return NextResponse.json({ error: "Company not found" }, { status: 404 });
+      }
+      company = data;
     }
 
     const prompt = buildCountdownKitPrompt(type, company, role, userInput);

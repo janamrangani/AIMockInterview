@@ -259,7 +259,10 @@ function makeDefaultState(): DocState {
 export default function KitPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [companyId, setCompanyId] = useState("");
+  const [customCompanyName, setCustomCompanyName] = useState("");
   const [role, setRole] = useState("");
+  const otherCompany = companies.find((c) => c.name === "Other");
+  const isOther = companyId === "other" || companyId === otherCompany?.id;
   const [userId, setUserId] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [plan, setPlan] = useState<string | null>(null);
@@ -306,6 +309,7 @@ export default function KitPage() {
           role: role.trim(),
           userInput: docStates[type].input,
           accessToken,
+          customCompanyName: isOther ? customCompanyName.trim() : undefined,
         }),
       });
       const json = await res.json();
@@ -325,7 +329,7 @@ export default function KitPage() {
   }
 
   const isPaidUser = plan === "pack" || plan === "admin";
-  const ready = companyId && role.trim();
+  const ready = companyId && role.trim() && (!isOther || customCompanyName.trim());
 
   if (authLoading) {
     return (
@@ -370,16 +374,25 @@ export default function KitPage() {
         <div className="grid sm:grid-cols-2 gap-4 mb-8 p-5 rounded-xl border border-border bg-muted/20">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Company</label>
-            <Select value={companyId} onValueChange={(v) => setCompanyId(v ?? "")}>
+            <Select value={companyId} onValueChange={(v) => { setCompanyId(v ?? ""); setCustomCompanyName(""); }}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a company" />
               </SelectTrigger>
               <SelectContent>
-                {companies.map((c) => (
+                {companies.filter((c) => c.name !== "Other").map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                 ))}
+                <SelectItem value={otherCompany?.id ?? "other"}>Other…</SelectItem>
               </SelectContent>
             </Select>
+            {isOther && (
+              <Input
+                value={customCompanyName}
+                onChange={(e) => setCustomCompanyName(e.target.value)}
+                placeholder="Company name (e.g. Palantir, Snowflake)"
+                autoFocus
+              />
+            )}
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Role</label>

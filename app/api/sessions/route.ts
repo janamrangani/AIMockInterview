@@ -7,7 +7,7 @@ import { getSupabaseServerClient } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {
-    const { companyId, role, accessToken } = await req.json();
+    const { companyId, role, accessToken, customCompanyName } = await req.json();
 
     if (!companyId || !role?.trim() || !accessToken) {
       return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     if (plan === "admin") {
       const { data: session, error: insertErr } = await supabase
         .from("sessions")
-        .insert({ user_id: user.id, company_id: companyId, role: role.trim() })
+        .insert({ user_id: user.id, company_id: companyId, role: role.trim(), custom_company_name: customCompanyName ?? null })
         .select()
         .single();
       if (insertErr) throw insertErr;
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
     // Insert the session
     const { data: session, error: insertErr } = await supabase
       .from("sessions")
-      .insert({ user_id: user.id, company_id: companyId, role: role.trim() })
+      .insert({ user_id: user.id, company_id: companyId, role: role.trim(), custom_company_name: customCompanyName ?? null })
       .select()
       .single();
 

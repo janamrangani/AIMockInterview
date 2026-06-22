@@ -4,7 +4,21 @@
       "Bash(npm run:*)",
       "Bash(git add:*)",
       "Bash(git commit -m ':*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(tee /tmp/devout.txt)",
+      "Read(//tmp/**)",
+      "Bash(node:*)",
+      "WebFetch(domain:www.cluelyai.com)",
+      "WebFetch(domain:cluely.com)",
+      "Bash(grep -n \"emoji\\\\|🎯\\\\|🔁\\\\|📊\\\\|📂\\\\|🌐\\\\|💼\\\\|🗣\\\\|❓\\\\|⭐\\\\|📧\\\\|💰\\\\|📋\\\\|🎉\\\\|💬\\\\|💻\\\\|✓\\\\|↑\\\\|✗\\\\|✅\\\\|❌\" /Users/janamrangani/Downloads/mockinterview/app/session/[id]/page.tsx)",
+      "Bash(git commit -m 'Fix Amazon logo — replace broken SVG paths with text '\\\\''a'\\\\'' + smile arc:*)",
+      "Bash(git commit -m 'Fix Amazon logo — use smile-arrow only \\(matches Amazon app icon\\):*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:cdn.simpleicons.org)",
+      "WebFetch(domain:www.svgrepo.com)",
+      "WebFetch(domain:upload.wikimedia.org)",
+      "Bash(vercel --version)",
+      "Bash(npm install:*)"
     ]
   }
 }

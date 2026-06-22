@@ -36,6 +36,7 @@ type FeedbackData = {
 type SessionInfo = {
   companyId: string;
   companyName: string;
+  customCompanyName: string | null;
   role: string;
 };
 
@@ -70,7 +71,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
     const supabase = getSupabase();
     supabase
       .from("sessions")
-      .select("company_id, role, companies(name)")
+      .select("company_id, role, custom_company_name, companies(name)")
       .eq("id", sessionId)
       .single()
       .then(({ data, error: err }) => {
@@ -80,6 +81,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
         setSessionInfo({
           companyId: data.company_id as string,
           companyName: companyName ?? "",
+          customCompanyName: (data.custom_company_name as string | null) ?? null,
           role: data.role as string,
         });
         setPhase("select-type");
@@ -94,7 +96,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
       const res = await fetch("/api/generate-question", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, companyId: sessionInfo.companyId, role: sessionInfo.role, type, previousQuestions }),
+        body: JSON.stringify({ sessionId, companyId: sessionInfo.companyId, role: sessionInfo.role, type, previousQuestions, customCompanyName: sessionInfo.customCompanyName }),
       });
       const json = await res.json();
       if (!res.ok || json.error) throw new Error(json.error ?? "Failed to generate question.");
@@ -117,7 +119,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
       const res = await fetch("/api/follow-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questionId: question.id, originalQuestion: question.prompt_text, userAnswer: answer, companyId: sessionInfo.companyId, followUpCount: 0 }),
+        body: JSON.stringify({ questionId: question.id, originalQuestion: question.prompt_text, userAnswer: answer, companyId: sessionInfo.companyId, followUpCount: 0, customCompanyName: sessionInfo.customCompanyName }),
       });
       const json = await res.json();
       if (!res.ok || json.error) throw new Error(json.error ?? "Failed to process answer.");
@@ -141,7 +143,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
       const res = await fetch("/api/follow-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questionId: question.id, originalQuestion: question.prompt_text, userAnswer: followUpAnswer, companyId: sessionInfo.companyId, followUpCount }),
+        body: JSON.stringify({ questionId: question.id, originalQuestion: question.prompt_text, userAnswer: followUpAnswer, companyId: sessionInfo.companyId, followUpCount, customCompanyName: sessionInfo.customCompanyName }),
       });
       const json = await res.json();
       if (!res.ok || json.error) throw new Error(json.error ?? "Failed to process answer.");
@@ -164,7 +166,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, questionId: question.id, companyId: sessionInfo.companyId, type: question.type, question: question.prompt_text, answerExchange: exchangeText }),
+        body: JSON.stringify({ sessionId, questionId: question.id, companyId: sessionInfo.companyId, type: question.type, question: question.prompt_text, answerExchange: exchangeText, customCompanyName: sessionInfo.customCompanyName }),
       });
       const json = await res.json();
       if (!res.ok || json.error) throw new Error(json.error ?? "Failed to get feedback.");
@@ -206,7 +208,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
     <main className="max-w-2xl mx-auto px-6 py-12">
       {/* Session breadcrumb */}
       <div className="flex items-center gap-2 mb-10 text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">{sessionInfo?.companyName}</span>
+        <span className="font-medium text-foreground">{sessionInfo?.customCompanyName ?? sessionInfo?.companyName}</span>
         <span>·</span>
         <span>{sessionInfo?.role}</span>
         {questionCount > 0 && (

@@ -26,10 +26,14 @@ function getSupabase() {
 export default function StartPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [companyId, setCompanyId] = useState("");
+  const [customCompanyName, setCustomCompanyName] = useState("");
   const [role, setRole] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [capReached, setCapReached] = useState(false);
+
+  const otherCompany = companies.find((c) => c.name === "Other");
+  const isOther = companyId === "other" || companyId === otherCompany?.id;
   const router = useRouter();
 
   useEffect(() => {
@@ -61,9 +65,10 @@ export default function StartPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        companyId,
+        companyId: isOther ? otherCompany?.id ?? companyId : companyId,
         role: role.trim(),
         accessToken: session.access_token,
+        customCompanyName: isOther ? customCompanyName.trim() : undefined,
       }),
     });
 
@@ -83,7 +88,7 @@ export default function StartPage() {
     router.push(`/session/${json.session.id}`);
   }
 
-  const canSubmit = companyId && role.trim() && !submitting;
+  const canSubmit = companyId && role.trim() && !submitting && (!isOther || customCompanyName.trim());
 
   return (
     <main className="max-w-lg mx-auto px-6 py-16">
@@ -97,18 +102,25 @@ export default function StartPage() {
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
           <label className="text-sm font-medium">Company</label>
-          <Select value={companyId} onValueChange={(v) => setCompanyId(v ?? "")} required>
+          <Select value={companyId} onValueChange={(v) => { setCompanyId(v ?? ""); setCustomCompanyName(""); }} required>
             <SelectTrigger>
               <SelectValue placeholder="Select a company" />
             </SelectTrigger>
             <SelectContent>
-              {companies.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name}
-                </SelectItem>
+              {companies.filter((c) => c.name !== "Other").map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
               ))}
+              <SelectItem value={otherCompany?.id ?? "other"}>Other…</SelectItem>
             </SelectContent>
           </Select>
+          {isOther && (
+            <Input
+              value={customCompanyName}
+              onChange={(e) => setCustomCompanyName(e.target.value)}
+              placeholder="Company name (e.g. Palantir, Snowflake)"
+              autoFocus
+            />
+          )}
         </div>
 
         <div className="space-y-2">

@@ -4,20 +4,30 @@ import { callClaude } from "@/lib/anthropic";
 import { buildQuestionGenPrompt } from "@/lib/prompts";
 import { getSupabaseServerClient } from "@/lib/supabase";
 
+const GENERIC_STYLE_NOTES =
+  "General professional interview. Behavioral questions follow the STAR format focusing on impact, ownership, collaboration, and problem-solving. Technical questions cover core CS fundamentals, algorithms, data structures, and system design appropriate to the role level.";
+
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, companyId, role, type, previousQuestions } =
+    const { sessionId, companyId, role, type, previousQuestions, customCompanyName } =
       await req.json();
 
     const supabase = getSupabaseServerClient();
-    const { data: company, error } = await supabase
-      .from("companies")
-      .select("name, interview_style_notes")
-      .eq("id", companyId)
-      .single();
 
-    if (error || !company) {
-      return NextResponse.json({ error: "Company not found" }, { status: 404 });
+    let company: { name: string; interview_style_notes: string } | null = null;
+
+    if (customCompanyName) {
+      company = { name: customCompanyName, interview_style_notes: GENERIC_STYLE_NOTES };
+    } else {
+      const { data, error } = await supabase
+        .from("companies")
+        .select("name, interview_style_notes")
+        .eq("id", companyId)
+        .single();
+      if (error || !data) {
+        return NextResponse.json({ error: "Company not found" }, { status: 404 });
+      }
+      company = data;
     }
 
     const prompt = buildQuestionGenPrompt(
