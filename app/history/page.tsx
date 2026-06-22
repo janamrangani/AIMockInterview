@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
+import { Trash2 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -47,15 +48,15 @@ function formatDate(iso: string): string {
 }
 
 function ScoreBadge({ score }: { score: number }) {
-  const [bg, text] =
+  const bg =
     score >= 7
-      ? ["bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200", ""]
+      ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200"
       : score >= 5
-      ? ["bg-amber-100 text-amber-700 ring-1 ring-amber-200", ""]
-      : ["bg-red-100 text-red-700 ring-1 ring-red-200", ""];
+      ? "bg-amber-100 text-amber-700 ring-1 ring-amber-200"
+      : "bg-red-100 text-red-700 ring-1 ring-red-200";
 
   return (
-    <div className={cn("flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums", bg, text)}>
+    <div className={cn("flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums", bg)}>
       {score}/10
     </div>
   );
@@ -64,6 +65,8 @@ function ScoreBadge({ score }: { score: number }) {
 export default function HistoryPage() {
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -80,6 +83,23 @@ export default function HistoryPage() {
         });
     });
   }, [router]);
+
+  async function handleDelete(sessionId: string) {
+    setDeleting(sessionId);
+    const supabase = getSupabase();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    await fetch("/api/sessions/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, accessToken: session.access_token }),
+    });
+
+    setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+    setConfirmDelete(null);
+    setDeleting(null);
+  }
 
   return (
     <main className="max-w-2xl mx-auto px-6 py-16">
@@ -121,44 +141,74 @@ export default function HistoryPage() {
             const score = avgScore(s.feedback);
             const name = companyName(s);
             const questionCount = s.feedback.length;
+            const isConfirming = confirmDelete === s.id;
+            const isDeleting = deleting === s.id;
 
             return (
-              <Link key={s.id} href={s.status === "completed" ? `/review/${s.id}` : `/session/${s.id}`} className="block group">
-                <div className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-border bg-white hover:border-indigo-200 hover:shadow-sm hover:shadow-indigo-50 transition-all duration-150">
+              <div key={s.id} className="relative group">
+                {/* Confirm delete overlay */}
+                {isConfirming && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4">
+                    <p className="text-sm font-medium text-red-800">Delete this session?</p>
+                    <button
+                      onClick={() => handleDelete(s.id)}
+                      disabled={isDeleting}
+                      className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 disabled:opacity-60"
+                    >
+                      {isDeleting ? "Deleting…" : "Yes, delete"}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(null)}
+                      className="px-3 py-1.5 rounded-lg border border-border bg-white text-xs font-semibold hover:bg-muted"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
 
-                  {/* Company logo */}
-                  <CompanyLogo name={name} size="md" />
+                <Link href={s.status === "completed" ? `/review/${s.id}` : `/session/${s.id}`} className="block">
+                  <div className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-border bg-white hover:border-indigo-200 hover:shadow-sm hover:shadow-indigo-50 transition-all duration-150">
 
-                  {/* Main content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                      <span className="font-semibold text-sm">{name}</span>
-                      <span className="text-muted-foreground text-sm truncate">· {s.role}</span>
-                      {s.status === "in_progress" && (
-                        <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs py-0 px-1.5">
-                          In progress
-                        </Badge>
-                      )}
+                    <CompanyLogo name={name} size="md" />
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                        <span className="font-semibold text-sm">{name}</span>
+                        <span className="text-muted-foreground text-sm truncate">· {s.role}</span>
+                        {s.status === "in_progress" && (
+                          <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs py-0 px-1.5">
+                            In progress
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(s.started_at)}
+                        {questionCount > 0 && ` · ${questionCount} question${questionCount !== 1 ? "s" : ""}`}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDate(s.started_at)}
-                      {questionCount > 0 && ` · ${questionCount} question${questionCount !== 1 ? "s" : ""}`}
-                    </p>
-                  </div>
 
-                  {/* Score + arrow */}
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    {score !== null ? (
-                      <ScoreBadge score={score} />
-                    ) : (
-                      <span className="text-xs text-muted-foreground">No score</span>
-                    )}
-                    <span className="text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all text-sm">
-                      →
-                    </span>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      {score !== null ? (
+                        <ScoreBadge score={score} />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No score</span>
+                      )}
+                      <span className="text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all text-sm">
+                        →
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+
+                {/* Delete button — visible on hover */}
+                <button
+                  onClick={(e) => { e.preventDefault(); setConfirmDelete(s.id); }}
+                  className="absolute right-14 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-50 hover:text-red-500 text-muted-foreground"
+                  title="Delete session"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             );
           })}
         </div>
