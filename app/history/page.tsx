@@ -103,7 +103,7 @@ export default function HistoryPage() {
 
   return (
     <main className="max-w-2xl mx-auto px-6 py-16">
-      <div className="flex items-baseline justify-between mb-8">
+      <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-1">Session history</h1>
           {!loading && (
