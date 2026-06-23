@@ -57,7 +57,7 @@ export default function Nav() {
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link
-          href={isPublic ? "/" : "/start"}
+          href={isLoggedIn ? "/dashboard" : "/"}
           className="font-bold text-base tracking-tight text-foreground"
         >
           InterviewAI

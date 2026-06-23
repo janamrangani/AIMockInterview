@@ -39,13 +39,13 @@ export default function LoginPage() {
         setInfo("Check your email and click the confirmation link, then sign in.");
         return;
       }
-      router.push("/history");
+      router.push("/dashboard");
       return;
     }
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) { setError(error.message); setLoading(false); return; }
-    router.push("/history");
+    router.push("/dashboard");
   }
 
   return (
