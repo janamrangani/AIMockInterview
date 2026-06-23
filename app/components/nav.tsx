@@ -94,6 +94,15 @@ export default function Nav() {
         {isLoggedIn && (
           <nav className="flex items-center gap-1">
             <Link
+              href="/dashboard"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                pathname === "/dashboard" ? "text-foreground font-medium" : "text-muted-foreground"
+              )}
+            >
+              Dashboard
+            </Link>
+            <Link
               href="/history"
               className={cn(
                 buttonVariants({ variant: "ghost", size: "sm" }),
