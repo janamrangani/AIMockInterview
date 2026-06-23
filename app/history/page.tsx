@@ -112,9 +112,11 @@ export default function HistoryPage() {
             </p>
           )}
         </div>
-        <Link href="/start" className={buttonVariants() + " flex-shrink-0"}>
-          New interview →
-        </Link>
+        {!loading && sessions.length > 0 && (
+          <Link href="/start" className={buttonVariants() + " flex-shrink-0"}>
+            New interview →
+          </Link>
+        )}
       </div>
 
       {loading && (
