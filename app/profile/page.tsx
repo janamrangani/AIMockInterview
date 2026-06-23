@@ -32,7 +32,7 @@ function PlanBadge({ plan }: { plan: string }) {
 async function extractTextFromPDF(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const pdfjsLib = await import("pdfjs-dist");
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const texts: string[] = [];
@@ -71,8 +71,8 @@ export default function ProfilePage() {
   }, [router]);
 
   async function uploadResume(file: File) {
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError("File must be under 5MB.");
+    if (file.size > 2 * 1024 * 1024) {
+      setUploadError("File must be under 2MB.");
       return;
     }
 
@@ -217,7 +217,7 @@ export default function ProfilePage() {
           <p className="text-sm font-medium mb-1">
             {uploading ? "Processing…" : "Drop your resume here or click to browse"}
           </p>
-          <p className="text-xs text-muted-foreground">PDF or TXT · Max 5MB</p>
+          <p className="text-xs text-muted-foreground">PDF or TXT · Max 2MB</p>
         </div>
 
         <input
