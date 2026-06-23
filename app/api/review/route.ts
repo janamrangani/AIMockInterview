@@ -1,5 +1,6 @@
 // app/api/review/route.ts
 // Fetches full session review data server-side (service role bypasses RLS on questions).
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 

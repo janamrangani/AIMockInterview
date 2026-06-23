@@ -3,9 +3,7 @@ import OpenAI from "openai";
 
 let _openai: OpenAI | null = null;
 function getClient() {
-  const apiKey = process.env.OPENAI_API_KEY;
-  console.log("OPENAI_API_KEY present:", !!apiKey, "length:", apiKey?.length ?? 0);
-  if (!_openai) _openai = new OpenAI({ apiKey });
+  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   return _openai;
 }
 
