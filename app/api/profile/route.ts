@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("plan, pack_expires_at, resume_filename, created_at")
+      .select("plan, pack_expires_at, resume_filename, resume_text, created_at")
       .eq("id", user.id)
       .single();
 
@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
       plan: profile?.plan ?? "free",
       pack_expires_at: profile?.pack_expires_at ?? null,
       resume_filename: profile?.resume_filename ?? null,
+      resume_text: profile?.resume_text ?? null,
       member_since: user.created_at,
       session_count: count ?? 0,
     });

@@ -4,53 +4,30 @@ import { getSupabaseServerClient } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
-    const file = formData.get("resume") as File | null;
-    const accessToken = formData.get("accessToken") as string | null;
+    const { accessToken, resumeText } = await req.json();
 
-    if (!file || !accessToken) {
-      return NextResponse.json({ error: "Missing file or token." }, { status: 400 });
+    if (!accessToken || !resumeText) {
+      return NextResponse.json({ error: "Missing fields." }, { status: 400 });
     }
 
     const supabase = getSupabaseServerClient();
-
     const { data: { user }, error: authErr } = await supabase.auth.getUser(accessToken);
     if (authErr || !user) {
       return NextResponse.json({ error: "Unauthenticated." }, { status: 401 });
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    let resumeText = "";
-    if (file.type === "application/pdf") {
-      // Use lib path directly to avoid pdf-parse loading test files (Next.js bug workaround)
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const pdfParse = require("pdf-parse/lib/pdf-parse");
-      const parsed = await pdfParse(buffer);
-      resumeText = parsed.text.trim();
-    } else {
-      // Plain text or docx fallback — read as text
-      resumeText = buffer.toString("utf-8").trim();
-    }
-
-    if (!resumeText) {
-      return NextResponse.json({ error: "Could not extract text from resume." }, { status: 400 });
-    }
-
-    // Truncate to 4000 chars to keep prompt size manageable
-    resumeText = resumeText.slice(0, 4000);
+    const trimmed = resumeText.trim().slice(0, 4000);
 
     const { error: updateErr } = await supabase
       .from("profiles")
-      .update({ resume_text: resumeText, resume_filename: file.name })
+      .update({ resume_text: trimmed })
       .eq("id", user.id);
 
     if (updateErr) throw updateErr;
 
-    return NextResponse.json({ ok: true, filename: file.name });
+    return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("resume upload error:", err);
-    return NextResponse.json({ error: "Failed to process resume." }, { status: 500 });
+    console.error("resume save error:", err);
+    return NextResponse.json({ error: "Failed to save resume." }, { status: 500 });
   }
 }
