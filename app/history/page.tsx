@@ -103,16 +103,16 @@ export default function HistoryPage() {
 
   return (
     <main className="max-w-2xl mx-auto px-6 py-16">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-1">Session history</h1>
+      <div className="flex items-center justify-between gap-4 mb-8">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight mb-1">Session history</h1>
           {!loading && (
             <p className="text-muted-foreground text-sm">
               {sessions.length} session{sessions.length !== 1 ? "s" : ""}
             </p>
           )}
         </div>
-        <Link href="/start" className={buttonVariants()}>
+        <Link href="/start" className={buttonVariants() + " flex-shrink-0"}>
           New interview →
         </Link>
       </div>
