@@ -56,6 +56,7 @@ export default function ProfilePage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [extractedText, setExtractedText] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -113,7 +114,8 @@ export default function ProfilePage() {
         setUploadError(json.error ?? "Upload failed.");
       } else {
         setUploadSuccess(true);
-        setProfile((prev) => prev ? { ...prev, resume_filename: file.name } : prev);
+        setExtractedText(resumeText.slice(0, 4000));
+        setProfile((prev) => prev ? { ...prev, resume_filename: file.name, resume_text: resumeText } : prev);
       }
     } catch (err) {
       console.error(err);
@@ -185,18 +187,20 @@ export default function ProfilePage() {
           Upload your resume and we'll tailor behavioral questions to your actual experience.
         </p>
 
-        {profile.resume_filename && !uploadSuccess && (
-          <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2 mb-4">
-            <FileText className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate">{profile.resume_filename}</span>
-            <CheckCircle2 className="w-4 h-4 flex-shrink-0 ml-auto" />
-          </div>
-        )}
-
-        {uploadSuccess && (
-          <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2 mb-4">
-            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-            <span>Resume uploaded successfully!</span>
+        {(profile.resume_filename) && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
+              <FileText className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate font-medium">{profile.resume_filename}</span>
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0 ml-auto" />
+            </div>
+            {(extractedText ?? profile.resume_text) && (
+              <textarea
+                readOnly
+                value={extractedText ?? profile.resume_text ?? ""}
+                className="w-full h-32 mt-2 rounded-lg border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground resize-none focus:outline-none"
+              />
+            )}
           </div>
         )}
 
