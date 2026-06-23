@@ -1,9 +1,9 @@
 "use client";
 // app/profile/page.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import { CheckCircle2, User } from "lucide-react";
+import { Upload, FileText, CheckCircle2, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 function getSupabase() {
@@ -18,6 +18,7 @@ type ProfileData = {
   plan: string;
   pack_expires_at: string | null;
   resume_filename: string | null;
+  resume_text: string | null;
   member_since: string;
   session_count: number;
 };
@@ -31,10 +32,11 @@ function PlanBadge({ plan }: { plan: string }) {
 export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [resumeText, setResumeText] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -44,31 +46,50 @@ export default function ProfilePage() {
       const res = await fetch(`/api/profile?accessToken=${session.access_token}`);
       const data = await res.json();
       setProfile(data);
-      if (data.resume_text) setResumeText(data.resume_text);
       setLoading(false);
     });
   }, [router]);
 
-  async function saveResume() {
-    setSaving(true);
-    setSaveError(null);
-    setSaved(false);
+  async function uploadResume(file: File) {
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("File must be under 5MB.");
+      return;
+    }
+
+    setUploading(true);
+    setUploadError(null);
+    setUploadSuccess(false);
 
     const supabase = getSupabase();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const res = await fetch("/api/profile/resume", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accessToken: session.access_token, resumeText }),
-    });
+    const formData = new FormData();
+    formData.append("resume", file);
+    formData.append("accessToken", session.access_token);
+
+    const res = await fetch("/api/profile/resume", { method: "POST", body: formData });
     const json = await res.json();
 
-    if (!res.ok) setSaveError(json.error ?? "Failed to save.");
-    else setSaved(true);
+    if (!res.ok) {
+      setUploadError(json.error ?? "Upload failed.");
+    } else {
+      setUploadSuccess(true);
+      setProfile((prev) => prev ? { ...prev, resume_filename: json.filename } : prev);
+    }
+    setUploading(false);
+  }
 
-    setSaving(false);
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) uploadResume(file);
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) uploadResume(file);
   }
 
   if (loading) {
@@ -114,38 +135,55 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Resume */}
+      {/* Resume upload */}
       <div className="rounded-xl border border-border bg-white p-6">
         <h2 className="font-semibold text-sm mb-1">Resume</h2>
         <p className="text-xs text-muted-foreground mb-4">
-          Paste your resume text and we'll tailor behavioral questions to your actual experience.
+          Upload your resume and we'll tailor behavioral questions to your actual experience.
         </p>
 
-        <textarea
-          value={resumeText}
-          onChange={(e) => { setResumeText(e.target.value); setSaved(false); }}
-          placeholder="Paste your resume here — work experience, skills, projects..."
-          className="w-full h-48 rounded-lg border border-border bg-muted/20 px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder:text-muted-foreground/60"
-        />
-
-        <div className="flex items-center justify-between mt-3">
-          <span className="text-xs text-muted-foreground">{resumeText.length}/4000 characters</span>
-          <div className="flex items-center gap-2">
-            {saved && (
-              <span className="flex items-center gap-1 text-xs text-emerald-600">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Saved
-              </span>
-            )}
-            {saveError && <span className="text-xs text-red-600">{saveError}</span>}
-            <button
-              onClick={saveResume}
-              disabled={saving || !resumeText.trim()}
-              className="px-4 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-            >
-              {saving ? "Saving…" : "Save resume"}
-            </button>
+        {profile.resume_filename && !uploadSuccess && (
+          <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2 mb-4">
+            <FileText className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">{profile.resume_filename}</span>
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0 ml-auto" />
           </div>
+        )}
+
+        {uploadSuccess && (
+          <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2 mb-4">
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+            <span>Resume uploaded successfully!</span>
+          </div>
+        )}
+
+        {uploadError && (
+          <p className="text-xs text-red-600 mb-3">{uploadError}</p>
+        )}
+
+        <div
+          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
+            dragOver ? "border-indigo-400 bg-indigo-50" : "border-border hover:border-indigo-300 hover:bg-muted/30"
+          }`}
+          onClick={() => fileInputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+        >
+          <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
+          <p className="text-sm font-medium mb-1">
+            {uploading ? "Processing…" : "Drop your resume here or click to browse"}
+          </p>
+          <p className="text-xs text-muted-foreground">PDF or TXT · Max 5MB</p>
         </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.txt"
+          className="hidden"
+          onChange={handleFileChange}
+        />
       </div>
     </main>
   );
