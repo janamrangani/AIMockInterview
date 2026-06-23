@@ -68,12 +68,7 @@ export default function Nav() {
           <nav className="flex items-center gap-1">
             <Link
               href="/pricing"
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "sm" }),
-                pathname === "/pricing"
-                  ? "text-foreground font-medium"
-                  : "text-muted-foreground"
-              )}
+              className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-muted-foreground")}
             >
               Pricing
             </Link>
