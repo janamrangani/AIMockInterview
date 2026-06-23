@@ -17,7 +17,11 @@ const stats = [
   { value: "7",     label: "Countdown Kit documents" },
 ];
 
-const companies = ["Amazon", "Google", "Meta", "Microsoft"];
+const companies = [
+  "Amazon", "Google", "Meta", "Microsoft", "Apple", "Netflix", "Uber", "Airbnb",
+  "Stripe", "Salesforce", "Adobe", "Goldman Sachs", "JPMorgan", "McKinsey",
+  "Deloitte", "IBM", "Oracle", "Spotify", "Twitter", "LinkedIn",
+];
 
 const steps = [
   { step: "01", title: "Pick your company and role",  desc: "Choose Amazon, Google, Meta, or Microsoft. Tell us the role you're targeting." },
@@ -177,15 +181,17 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="relative border-t border-white/[0.06] px-6 py-4">
-          <div className="max-w-6xl mx-auto flex items-center justify-center gap-2 flex-wrap">
-            <span className="text-xs text-zinc-600 mr-2">Calibrated for</span>
-            {companies.map((c) => (
-              <span key={c} className="text-xs font-semibold text-zinc-400 border border-white/10 bg-white/5 px-3 py-1 rounded-full">
+        <div className="relative border-t border-white/[0.06] py-4 overflow-hidden">
+          <div className="flex items-center gap-3 w-max animate-marquee">
+            {[...companies, ...companies].map((c, i) => (
+              <span key={i} className="text-xs font-semibold text-zinc-400 border border-white/10 bg-white/5 px-3 py-1.5 rounded-full whitespace-nowrap">
                 {c}
               </span>
             ))}
           </div>
+          {/* Fade edges */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-zinc-950 to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-zinc-950 to-transparent" />
         </div>
       </section>
 
