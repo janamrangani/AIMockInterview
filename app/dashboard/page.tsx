@@ -95,29 +95,27 @@ export default function DashboardPage() {
   return (
     <main className="max-w-2xl mx-auto px-6 py-12">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          {loading ? (
-            <div className="h-8 w-48 bg-muted/40 rounded-lg animate-pulse mb-2" />
-          ) : (
-            <h1 className="text-2xl font-bold tracking-tight mb-1">
-              Welcome back, {firstName}
-            </h1>
-          )}
-          {!loading && data && (
+      <div className="mb-8">
+        {loading ? (
+          <div className="h-8 w-48 bg-muted/40 rounded-lg animate-pulse mb-2" />
+        ) : (
+          <>
+            <div className="flex items-center justify-between gap-4 mb-1">
+              <h1 className="text-2xl font-bold tracking-tight">Welcome back, {firstName}</h1>
+              <Link href="/start" className={cn(buttonVariants({ size: "sm" }), "flex-shrink-0")}>
+                New interview →
+              </Link>
+            </div>
             <div className="flex items-center gap-2">
-              <PlanBadge plan={data.plan} />
-              {data.plan === "free" && (
+              <PlanBadge plan={data?.plan ?? "free"} />
+              {data?.plan === "free" && (
                 <Link href="/pricing" className="text-xs text-indigo-600 hover:underline">
                   Upgrade for follow-ups & full feedback →
                 </Link>
               )}
             </div>
-          )}
-        </div>
-        <Link href="/start" className={buttonVariants({ size: "sm" })}>
-          New interview →
-        </Link>
+          </>
+        )}
       </div>
 
       {/* Stats */}

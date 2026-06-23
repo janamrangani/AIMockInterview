@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { Upload, FileText, CheckCircle2, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import Link from "next/link";
 
 function getSupabase() {
   return createClient(
@@ -180,7 +182,16 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Resume upload */}
+      {/* Resume upload — paid plans only */}
+      {profile.plan === "free" ? (
+        <div className="rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center">
+          <p className="text-sm font-medium mb-1">Resume upload is a paid feature</p>
+          <p className="text-xs text-muted-foreground mb-4">Upgrade to Pack to upload your resume and get questions tailored to your experience.</p>
+          <Link href="/pricing" className={buttonVariants({ size: "sm", variant: "outline" })}>
+            View plans →
+          </Link>
+        </div>
+      ) : (
       <div className="rounded-xl border border-border bg-white p-6">
         <h2 className="font-semibold text-sm mb-1">Resume</h2>
         <p className="text-xs text-muted-foreground mb-4">
@@ -232,6 +243,7 @@ export default function ProfilePage() {
           onChange={handleFileChange}
         />
       </div>
+      )}
     </main>
   );
 }
