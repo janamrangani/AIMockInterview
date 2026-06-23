@@ -49,7 +49,7 @@ export default function Nav() {
   if (pathname === "/login") return null;
 
   const isLoggedIn = !!userEmail;
-  const isPublic = pathname === "/" || pathname === "/pricing";
+  const isPublic = pathname === "/";
   const initial = userEmail ? userEmail[0].toUpperCase() : "?";
 
   return (
