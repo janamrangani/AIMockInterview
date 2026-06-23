@@ -29,6 +29,26 @@ function PlanBadge({ plan }: { plan: string }) {
   return <Badge variant="outline" className="text-muted-foreground">Free</Badge>;
 }
 
+async function extractTextFromPDF(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdfjsLib = await import("pdfjs-dist");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const texts: string[] = [];
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items
+      .map((item: any) => ("str" in item ? item.str : ""))
+      .join(" ");
+    texts.push(pageText);
+  }
+
+  return texts.join("\n").trim();
+}
+
 export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,23 +80,46 @@ export default function ProfilePage() {
     setUploadError(null);
     setUploadSuccess(false);
 
-    const supabase = getSupabase();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    try {
+      let resumeText = "";
+      if (file.type === "application/pdf") {
+        resumeText = await extractTextFromPDF(file);
+      } else {
+        resumeText = await file.text();
+      }
 
-    const formData = new FormData();
-    formData.append("resume", file);
-    formData.append("accessToken", session.access_token);
+      if (!resumeText.trim()) {
+        setUploadError("Could not extract text from this file.");
+        setUploading(false);
+        return;
+      }
 
-    const res = await fetch("/api/profile/resume", { method: "POST", body: formData });
-    const json = await res.json();
+      const supabase = getSupabase();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
 
-    if (!res.ok) {
-      setUploadError(json.error ?? "Upload failed.");
-    } else {
-      setUploadSuccess(true);
-      setProfile((prev) => prev ? { ...prev, resume_filename: json.filename } : prev);
+      const res = await fetch("/api/profile/resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accessToken: session.access_token,
+          resumeText,
+          filename: file.name,
+        }),
+      });
+      const json = await res.json();
+
+      if (!res.ok) {
+        setUploadError(json.error ?? "Upload failed.");
+      } else {
+        setUploadSuccess(true);
+        setProfile((prev) => prev ? { ...prev, resume_filename: file.name } : prev);
+      }
+    } catch (err) {
+      console.error(err);
+      setUploadError("Failed to read file.");
     }
+
     setUploading(false);
   }
 
