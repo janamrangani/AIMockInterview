@@ -48,8 +48,8 @@ export default function Nav() {
 
   if (pathname === "/login") return null;
 
-  const isLoggedIn = authChecked && !!userEmail;
-  const isPublic = !isLoggedIn && (pathname === "/" || pathname === "/pricing");
+  const isLoggedIn = !!userEmail;
+  const isPublic = pathname === "/" || pathname === "/pricing";
   const initial = userEmail ? userEmail[0].toUpperCase() : "?";
 
   return (
@@ -63,8 +63,8 @@ export default function Nav() {
           InterviewAI
         </Link>
 
-        {/* Public nav */}
-        {isPublic && (
+        {/* Public nav — only when not logged in */}
+        {isPublic && !isLoggedIn && authChecked && (
           <nav className="flex items-center gap-1">
             <Link
               href="/pricing"
@@ -95,8 +95,8 @@ export default function Nav() {
           </nav>
         )}
 
-        {/* Auth nav */}
-        {!isPublic && (
+        {/* Auth nav — when logged in on any page */}
+        {isLoggedIn && (
           <nav className="flex items-center gap-1">
             <Link
               href="/history"
