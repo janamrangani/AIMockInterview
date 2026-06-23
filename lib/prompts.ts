@@ -15,12 +15,18 @@ export function buildQuestionGenPrompt(
   company: Company,
   role: string,
   type: "behavioral" | "technical",
-  previousQuestions: string[]
+  previousQuestions: string[],
+  resumeText?: string | null
 ): string {
+  const resumeSection =
+    type === "behavioral" && resumeText
+      ? `\nCandidate's resume (use this to ask about their specific experiences, projects, or roles — don't ask generic questions when you can ask about something real from their background):\n${resumeText}\n`
+      : "";
+
   return `You are an experienced technical interviewer at ${company.name}, conducting a real ${role} interview.
 
 Company interview style: ${company.interview_style_notes}
-
+${resumeSection}
 Generate ONE ${type} interview question that matches how ${company.name} actually interviews candidates for this role level.
 
 ${previousQuestions.length > 0 ? `Avoid repeating the substance of these previously-asked questions:\n${previousQuestions.map((q) => `- ${q}`).join("\n")}` : ""}

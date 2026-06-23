@@ -30,11 +30,30 @@ export async function POST(req: NextRequest) {
       company = data;
     }
 
+    // Fetch resume text if available
+    let resumeText: string | null = null;
+    if (type === "behavioral" && sessionId) {
+      const { data: sessionRow } = await supabase
+        .from("sessions")
+        .select("user_id")
+        .eq("id", sessionId)
+        .single();
+      if (sessionRow) {
+        const { data: profileRow } = await supabase
+          .from("profiles")
+          .select("resume_text")
+          .eq("id", sessionRow.user_id)
+          .single();
+        resumeText = profileRow?.resume_text ?? null;
+      }
+    }
+
     const prompt = buildQuestionGenPrompt(
       company,
       role,
       type,
-      previousQuestions ?? []
+      previousQuestions ?? [],
+      resumeText
     );
     const questionText = await callClaude(prompt, { maxTokens: 200 });
 
