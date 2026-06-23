@@ -24,8 +24,9 @@ export async function POST(req: NextRequest) {
 
     let resumeText = "";
     if (file.type === "application/pdf") {
+      // Use lib path directly to avoid pdf-parse loading test files (Next.js bug workaround)
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const pdfParse = require("pdf-parse");
+      const pdfParse = require("pdf-parse/lib/pdf-parse");
       const parsed = await pdfParse(buffer);
       resumeText = parsed.text.trim();
     } else {
