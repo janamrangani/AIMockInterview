@@ -18,6 +18,7 @@ export default function Nav() {
   const pathname = usePathname();
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -25,6 +26,7 @@ export default function Nav() {
     const supabase = getSupabase();
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUserEmail(session?.user?.email ?? null);
+      setAuthChecked(true);
     });
   }, []);
 
@@ -46,7 +48,8 @@ export default function Nav() {
 
   if (pathname === "/login") return null;
 
-  const isPublic = pathname === "/" || pathname === "/pricing";
+  const isLoggedIn = authChecked && !!userEmail;
+  const isPublic = !isLoggedIn && (pathname === "/" || pathname === "/pricing");
   const initial = userEmail ? userEmail[0].toUpperCase() : "?";
 
   return (
