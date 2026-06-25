@@ -42,22 +42,34 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = getSupabaseServerClient();
-    const packExpiresAt = new Date();
+    const now = new Date();
+    const packExpiresAt = new Date(now);
     packExpiresAt.setDate(packExpiresAt.getDate() + 30);
 
-    const { error } = await supabase
+    const { error: profileErr } = await supabase
       .from("profiles")
       .upsert({
         id: userId,
         plan: "pack",
-        pack_purchased_at: new Date().toISOString(),
+        pack_purchased_at: now.toISOString(),
+        pack_started_at: now.toISOString(),
         pack_expires_at: packExpiresAt.toISOString(),
       });
 
-    if (error) {
-      console.error("Webhook: failed to update profile for user", userId, error);
+    if (profileErr) {
+      console.error("Webhook: failed to update profile for user", userId, profileErr);
       return NextResponse.json({ error: "DB update failed." }, { status: 500 });
     }
+
+    // Record payment history
+    await supabase.from("payment_history").insert({
+      user_id: userId,
+      stripe_session_id: session.id,
+      stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
+      amount_cents: session.amount_total ?? 1700,
+      currency: session.currency ?? "usd",
+      plan_granted: "pack",
+    });
 
     console.log(`Pack granted to user ${userId}, expires ${packExpiresAt.toISOString()}`);
   }

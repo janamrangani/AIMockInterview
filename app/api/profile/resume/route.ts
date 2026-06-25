@@ -1,5 +1,6 @@
 // app/api/profile/resume/route.ts
-// Receives pre-extracted resume text from the client (PDF parsed in browser via pdfjs-dist)
+// Receives pre-extracted resume text from the client (PDF parsed in browser via pdfjs-dist).
+// Each upload creates a new row in user_resumes; the active resume is always the most recent one.
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 
@@ -19,12 +20,15 @@ export async function POST(req: NextRequest) {
 
     const trimmed = resumeText.trim().slice(0, 4000);
 
-    const { error: updateErr } = await supabase
-      .from("profiles")
-      .update({ resume_text: trimmed, resume_filename: filename ?? null })
-      .eq("id", user.id);
+    const { error: insertErr } = await supabase
+      .from("user_resumes")
+      .insert({
+        user_id: user.id,
+        filename: filename ?? "resume",
+        resume_text: trimmed,
+      });
 
-    if (updateErr) throw updateErr;
+    if (insertErr) throw insertErr;
 
     return NextResponse.json({ ok: true, filename });
   } catch (err) {

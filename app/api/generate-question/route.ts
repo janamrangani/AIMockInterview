@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       company = data;
     }
 
-    // Fetch resume text if available
+    // Fetch the user's active resume (most recent upload) for behavioral question personalisation
     let resumeText: string | null = null;
     if (type === "behavioral" && sessionId) {
       const { data: sessionRow } = await supabase
@@ -39,12 +39,14 @@ export async function POST(req: NextRequest) {
         .eq("id", sessionId)
         .single();
       if (sessionRow) {
-        const { data: profileRow } = await supabase
-          .from("profiles")
+        const { data: resumeRow } = await supabase
+          .from("user_resumes")
           .select("resume_text")
-          .eq("id", sessionRow.user_id)
-          .single();
-        resumeText = profileRow?.resume_text ?? null;
+          .eq("user_id", sessionRow.user_id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        resumeText = resumeRow?.resume_text ?? null;
       }
     }
 

@@ -1,125 +1,207 @@
 -- AI Mock Interview — Supabase schema
--- Run this in the Supabase SQL editor (or via `supabase db push`) to set up the database.
+-- Single authoritative source of truth. Run in the Supabase SQL editor.
+-- Safe to re-run: uses IF NOT EXISTS / ON CONFLICT DO NOTHING throughout.
 
--- Companies: hardcoded list to start (Amazon, Google, Meta, etc.)
-create table companies (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  slug text unique not null,
-  interview_style_notes text not null, -- used as context in the AI prompt, e.g. Amazon's Leadership Principles
-  created_at timestamptz default now()
+-- ── Companies ─────────────────────────────────────────────────────────────────
+create table if not exists companies (
+  id                    uuid primary key default gen_random_uuid(),
+  name                  text not null,
+  slug                  text unique not null,
+  interview_style_notes text not null,
+  created_at            timestamptz default now()
 );
 
--- Sessions: one mock interview attempt
-create table sessions (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  company_id uuid not null references companies(id),
-  role text not null, -- e.g. "SWE Intern", "New Grad SWE"
-  status text not null default 'in_progress', -- in_progress | completed
-  started_at timestamptz default now(),
-  completed_at timestamptz
-);
-
--- Questions: behavioral or technical, generated per session
-create table questions (
-  id uuid primary key default gen_random_uuid(),
-  session_id uuid not null references sessions(id) on delete cascade,
-  type text not null check (type in ('behavioral', 'technical')),
-  prompt_text text not null,
-  order_index int not null
-);
-
--- Answers: user responses, including follow-up answers
-create table answers (
-  id uuid primary key default gen_random_uuid(),
-  question_id uuid not null references questions(id) on delete cascade,
-  user_answer_text text not null,
-  is_followup boolean default false,
-  parent_answer_id uuid references answers(id),
-  created_at timestamptz default now()
-);
-
--- Feedback: AI-generated scoring + notes per question
-create table feedback (
-  id uuid primary key default gen_random_uuid(),
-  session_id uuid not null references sessions(id) on delete cascade,
-  question_id uuid not null references questions(id) on delete cascade,
-  score int check (score between 1 and 10),
-  strengths_text text,
-  gaps_text text,
-  created_at timestamptz default now()
-);
-
--- Generated documents: the "Interview Countdown Kit" add-ons
--- (LinkedIn rewrite, STAR stories, thank-you emails, etc.) — one flexible table for all of them
-create table generated_documents (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  type text not null check (type in (
-    'linkedin_headline', 'star_story', 'interviewer_questions',
-    'thank_you_email', 'negotiation_points', 'logistics_checklist',
-    'tell_me_about_yourself'
-  )),
-  input_text text,
-  output_text text not null,
-  created_at timestamptz default now()
-);
-
--- Companies are public — no RLS needed
 alter table companies disable row level security;
 
--- Row Level Security: users can only see their own data
-alter table sessions enable row level security;
-alter table answers enable row level security;
-alter table feedback enable row level security;
-alter table generated_documents enable row level security;
-
-create policy "Users can view own sessions" on sessions
-  for select using (auth.uid() = user_id);
-create policy "Users can insert own sessions" on sessions
-  for insert with check (auth.uid() = user_id);
-
-create policy "Users can view own generated documents" on generated_documents
-  for select using (auth.uid() = user_id);
-create policy "Users can insert own generated documents" on generated_documents
-  for insert with check (auth.uid() = user_id);
-
--- Answers/feedback are scoped via their parent session — join-based policies
-create policy "Users can view own answers" on answers
-  for select using (
-    exists (
-      select 1 from questions q
-      join sessions s on s.id = q.session_id
-      where q.id = answers.question_id and s.user_id = auth.uid()
-    )
-  );
-
-create policy "Users can view own feedback" on feedback
-  for select using (
-    exists (
-      select 1 from sessions s
-      where s.id = feedback.session_id and s.user_id = auth.uid()
-    )
-  );
-
--- ── Profiles: plan tracking (free | pack) ────────────────────────────────
-create table profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  plan text not null default 'free' check (plan in ('free', 'pack', 'admin')),
+-- ── Profiles ──────────────────────────────────────────────────────────────────
+create table if not exists profiles (
+  id                uuid primary key references auth.users(id) on delete cascade,
+  plan              text not null default 'free' check (plan in ('free', 'pack', 'admin')),
   pack_purchased_at timestamptz,
+  pack_started_at   timestamptz,   -- explicit start; used for cap window calculation
   pack_expires_at   timestamptz,
   created_at        timestamptz default now()
 );
 
 alter table profiles enable row level security;
 
-create policy "Users can view own profile" on profiles
-  for select using (auth.uid() = id);
+create policy "Users can view own profile"   on profiles for select  using (auth.uid() = id);
+create policy "Users can update own profile" on profiles for update  using (auth.uid() = id) with check (auth.uid() = id);
 
--- Service role (used in API routes) bypasses RLS automatically.
+create index if not exists idx_profiles_pack on profiles(plan, pack_expires_at) where plan = 'pack';
 
--- Auto-create a profile row when a new user signs up
+-- ── User Resumes ──────────────────────────────────────────────────────────────
+-- Each upload is a new row. Active resume = most recent (order by created_at desc limit 1).
+-- Replaces resume_filename / resume_text columns on profiles.
+create table if not exists user_resumes (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  filename    text not null,
+  resume_text text not null,
+  created_at  timestamptz default now()
+);
+
+alter table user_resumes enable row level security;
+
+create policy "Users can view own resumes"   on user_resumes for select using (auth.uid() = user_id);
+create policy "Users can insert own resumes" on user_resumes for insert with check (auth.uid() = user_id);
+create policy "Users can delete own resumes" on user_resumes for delete using (auth.uid() = user_id);
+
+create index if not exists idx_user_resumes_user on user_resumes(user_id, created_at desc);
+
+-- ── Sessions ──────────────────────────────────────────────────────────────────
+create table if not exists sessions (
+  id                 uuid primary key default gen_random_uuid(),
+  user_id            uuid not null references auth.users(id) on delete cascade,
+  company_id         uuid not null references companies(id),
+  role               text not null,
+  status             text not null default 'in_progress' check (status in ('in_progress', 'completed')),
+  custom_company_name text,           -- display name when company is "Other"
+  question_count     int not null default 0,
+  duration_seconds   int,             -- set on session completion
+  started_at         timestamptz default now(),
+  completed_at       timestamptz
+);
+
+alter table sessions enable row level security;
+
+create policy "Users can view own sessions"   on sessions for select using (auth.uid() = user_id);
+create policy "Users can insert own sessions" on sessions for insert with check (auth.uid() = user_id);
+create policy "Users can update own sessions" on sessions for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users can delete own sessions" on sessions for delete using (auth.uid() = user_id);
+
+create index if not exists idx_sessions_user_started on sessions(user_id, started_at desc);
+create index if not exists idx_sessions_user_status  on sessions(user_id, status);
+
+-- ── Questions ─────────────────────────────────────────────────────────────────
+create table if not exists questions (
+  id              uuid primary key default gen_random_uuid(),
+  session_id      uuid not null references sessions(id) on delete cascade,
+  type            text not null check (type in ('behavioral', 'technical')),
+  prompt_text     text not null,
+  order_index     int not null,
+  follow_up_count int not null default 0 check (follow_up_count <= 2)
+);
+
+alter table questions enable row level security;
+
+create policy "Users can view own questions"   on questions for select using (
+  exists (select 1 from sessions s where s.id = questions.session_id and s.user_id = auth.uid())
+);
+create policy "Users can insert own questions" on questions for insert with check (
+  exists (select 1 from sessions s where s.id = questions.session_id and s.user_id = auth.uid())
+);
+create policy "Users can update own questions" on questions for update using (
+  exists (select 1 from sessions s where s.id = questions.session_id and s.user_id = auth.uid())
+);
+
+create index if not exists idx_questions_session on questions(session_id, order_index);
+
+-- ── Answers ───────────────────────────────────────────────────────────────────
+-- follow_up_index: 0 = initial answer, 1 = first follow-up, 2 = second follow-up
+create table if not exists answers (
+  id               uuid primary key default gen_random_uuid(),
+  question_id      uuid not null references questions(id) on delete cascade,
+  user_answer_text text not null,
+  follow_up_index  int not null default 0,   -- replaces is_followup boolean
+  is_followup      boolean generated always as (follow_up_index > 0) stored,  -- backwards-compat alias
+  parent_answer_id uuid references answers(id),
+  created_at       timestamptz default now()
+);
+
+alter table answers enable row level security;
+
+create policy "Users can view own answers" on answers for select using (
+  exists (
+    select 1 from questions q
+    join sessions s on s.id = q.session_id
+    where q.id = answers.question_id and s.user_id = auth.uid()
+  )
+);
+create policy "Users can insert own answers" on answers for insert with check (
+  exists (
+    select 1 from questions q
+    join sessions s on s.id = q.session_id
+    where q.id = answers.question_id and s.user_id = auth.uid()
+  )
+);
+
+create index if not exists idx_answers_question on answers(question_id, follow_up_index);
+
+-- ── Feedback ──────────────────────────────────────────────────────────────────
+-- Always store full strengths + gaps. Gate visibility in the API layer, not here.
+create table if not exists feedback (
+  id             uuid primary key default gen_random_uuid(),
+  session_id     uuid not null references sessions(id) on delete cascade,
+  question_id    uuid not null references questions(id) on delete cascade,
+  score          int check (score between 1 and 10),
+  strengths_text text,
+  gaps_text      text,
+  created_at     timestamptz default now()
+);
+
+alter table feedback enable row level security;
+
+create policy "Users can view own feedback" on feedback for select using (
+  exists (select 1 from sessions s where s.id = feedback.session_id and s.user_id = auth.uid())
+);
+create policy "Users can insert own feedback" on feedback for insert with check (
+  exists (select 1 from sessions s where s.id = feedback.session_id and s.user_id = auth.uid())
+);
+
+create index if not exists idx_feedback_session  on feedback(session_id);
+create index if not exists idx_feedback_question on feedback(question_id);
+
+-- ── Generated Documents ───────────────────────────────────────────────────────
+-- Countdown Kit outputs — stores company/role context alongside the generated content.
+create table if not exists generated_documents (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  company_id  uuid references companies(id),   -- null when custom company name used
+  role        text,
+  type        text not null check (type in (
+    'linkedin_headline', 'star_story', 'interviewer_questions',
+    'thank_you_email', 'negotiation_points', 'logistics_checklist',
+    'tell_me_about_yourself'
+  )),
+  input_text  text,
+  output_text text not null,
+  created_at  timestamptz default now()
+);
+
+alter table generated_documents enable row level security;
+
+create policy "Users can view own generated documents"   on generated_documents for select using (auth.uid() = user_id);
+create policy "Users can insert own generated documents" on generated_documents for insert with check (auth.uid() = user_id);
+
+create index if not exists idx_generated_docs_user on generated_documents(user_id, type, created_at desc);
+
+-- ── Payment History ───────────────────────────────────────────────────────────
+create table if not exists payment_history (
+  id                 uuid primary key default gen_random_uuid(),
+  user_id            uuid not null references auth.users(id) on delete cascade,
+  stripe_session_id  text not null unique,
+  stripe_customer_id text,
+  amount_cents       int not null,
+  currency           text not null default 'usd',
+  plan_granted       text not null,
+  created_at         timestamptz default now()
+);
+
+alter table payment_history enable row level security;
+
+create policy "Users can view own payment history" on payment_history for select using (auth.uid() = user_id);
+
+create index if not exists idx_payment_history_user on payment_history(user_id, created_at desc);
+
+-- ── Waitlist ──────────────────────────────────────────────────────────────────
+create table if not exists waitlist (
+  id         uuid primary key default gen_random_uuid(),
+  email      text not null unique,
+  created_at timestamptz default now()
+);
+
+-- ── Auto-create profile on signup ─────────────────────────────────────────────
 create or replace function handle_new_user()
 returns trigger as $$
 begin
@@ -129,21 +211,12 @@ begin
 end;
 $$ language plpgsql security definer;
 
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure handle_new_user();
 
--- ── Waitlist: email capture for the Unlimited plan ────────────────────────
-create table waitlist (
-  id         uuid primary key default gen_random_uuid(),
-  email      text not null unique,
-  created_at timestamptz default now()
-);
-
--- ── Add custom_company_name to sessions for "Other" company support
-alter table sessions add column if not exists custom_company_name text;
-
--- ── Seed companies
+-- ── Seed companies ────────────────────────────────────────────────────────────
 insert into companies (name, slug, interview_style_notes) values
 ('Amazon', 'amazon', 'Amazon interviews are structured around the 16 Leadership Principles. Expect "Tell me about a time..." behavioral questions with a strong bar for ownership, customer obsession, and data-driven decisions. Technical questions emphasize coding fundamentals (arrays, strings, trees, graphs) and clean, working code over cleverness.'),
 ('Google', 'google', 'Google interviews emphasize general cognitive ability, coding fundamentals, and "Googleyness" (collaboration, comfort with ambiguity). Behavioral questions probe how you handle ambiguity and work with others. Technical questions favor strong algorithmic fundamentals and clear communication of approach.'),

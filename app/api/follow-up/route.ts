@@ -40,11 +40,11 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabaseServerClient();
 
-    // Save the user's answer first
+    // Save the user's answer. follow_up_index: 0 = initial, 1 = first follow-up, 2 = second.
     await supabase.from("answers").insert({
       question_id: questionId,
       user_answer_text: userAnswer,
-      is_followup: followUpCount > 0,
+      follow_up_index: followUpCount,
     });
 
     // Free users don't get follow-ups
@@ -79,6 +79,14 @@ export async function POST(req: NextRequest) {
     const result = (await callClaude(prompt, { maxTokens: 150 })).trim();
 
     const followUp = result === "NO_FOLLOWUP_NEEDED" ? null : result;
+
+    // Persist follow-up count on the question so the server tracks state
+    if (followUp) {
+      await supabase
+        .from("questions")
+        .update({ follow_up_count: followUpCount + 1 })
+        .eq("id", questionId);
+    }
 
     return NextResponse.json({ followUp });
   } catch (err) {

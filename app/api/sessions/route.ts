@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     // Fetch or bootstrap the user's profile
     let { data: profile } = await supabase
       .from("profiles")
-      .select("plan, pack_expires_at")
+      .select("plan, pack_started_at, pack_expires_at")
       .eq("id", user.id)
       .single();
 
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       const { data: newProfile } = await supabase
         .from("profiles")
         .insert({ id: user.id })
-        .select("plan, pack_expires_at")
+        .select("plan, pack_started_at, pack_expires_at")
         .single();
       profile = newProfile;
     }
@@ -76,7 +76,6 @@ export async function POST(req: NextRequest) {
         );
       }
     } else if (plan === "pack" && !packActive) {
-      // Pack expired
       return NextResponse.json(
         {
           error: "pack_expired",
@@ -85,14 +84,17 @@ export async function POST(req: NextRequest) {
         { status: 403 }
       );
     } else if (packActive) {
-      // Pack active — enforce 5-session cap within the pack period
+      // Pack active — enforce 5-session cap within the pack period.
+      // Use pack_started_at if available, otherwise fall back to pack_expires_at - 30 days.
+      const packStarted = profile?.pack_started_at
+        ? new Date(profile.pack_started_at)
+        : new Date(packExpires!.getTime() - 30 * 24 * 60 * 60 * 1000);
+
       const { count } = await supabase
         .from("sessions")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id)
-        .gte("started_at", packExpires
-          ? new Date(packExpires.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
-          : "1970-01-01");
+        .gte("started_at", packStarted.toISOString());
 
       if ((count ?? 0) >= 5) {
         return NextResponse.json(

@@ -56,6 +56,8 @@ export async function POST(req: NextRequest) {
       .from("generated_documents")
       .insert({
         user_id: user.id,
+        company_id: customCompanyName ? null : (companyId ?? null),
+        role: role ?? null,
         type,
         input_text: userInput,
         output_text: outputText.trim(),

@@ -16,9 +16,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthenticated." }, { status: 401 });
     }
 
+    const completedAt = new Date().toISOString();
+
+    // Count questions answered in this session
+    const { count: qCount } = await supabase
+      .from("questions")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", sessionId);
+
+    // Fetch started_at to compute duration
+    const { data: sessionRow } = await supabase
+      .from("sessions")
+      .select("started_at")
+      .eq("id", sessionId)
+      .eq("user_id", user.id)
+      .single();
+
+    const durationSeconds = sessionRow?.started_at
+      ? Math.round((Date.now() - new Date(sessionRow.started_at).getTime()) / 1000)
+      : null;
+
     await supabase
       .from("sessions")
-      .update({ status: "completed", completed_at: new Date().toISOString() })
+      .update({
+        status: "completed",
+        completed_at: completedAt,
+        question_count: qCount ?? 0,
+        duration_seconds: durationSeconds,
+      })
       .eq("id", sessionId)
       .eq("user_id", user.id);
 

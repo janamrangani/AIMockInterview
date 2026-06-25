@@ -56,22 +56,28 @@ export async function POST(req: NextRequest) {
       parsed = match ? JSON.parse(match[0]) : { score: null, strengths: "", gaps: raw };
     }
 
+    // Always persist the full feedback. Free users see only the score in the response.
     const { data: feedback, error: insertError } = await supabase
       .from("feedback")
       .insert({
         session_id: sessionId,
         question_id: questionId,
         score: parsed.score,
-        // Only store strengths/gaps for paid users
-        strengths_text: isPaid ? parsed.strengths : null,
-        gaps_text: isPaid ? parsed.gaps : null,
+        strengths_text: parsed.strengths ?? null,
+        gaps_text: parsed.gaps ?? null,
       })
       .select()
       .single();
 
     if (insertError) throw insertError;
 
-    return NextResponse.json({ feedback });
+    return NextResponse.json({
+      feedback: {
+        ...feedback,
+        strengths_text: isPaid ? feedback?.strengths_text : null,
+        gaps_text: isPaid ? feedback?.gaps_text : null,
+      },
+    });
   } catch (err) {
     console.error("feedback error:", err);
     return NextResponse.json(
