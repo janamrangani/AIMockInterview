@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
       supabase.from("profiles").select("plan, pack_expires_at").eq("id", user.id).single(),
       supabase
         .from("sessions")
-        .select("id, role, status, started_at, custom_company_name, companies(name), feedback(score)")
+        .select("id, role, status, started_at, custom_company_name, question_count, companies(name), feedback(score)")
         .eq("user_id", user.id)
         .order("started_at", { ascending: false })
         .limit(3),

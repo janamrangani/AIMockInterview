@@ -17,6 +17,8 @@ type SessionData = {
   status: string;
   started_at: string;
   custom_company_name: string | null;
+  question_count: number;
+  duration_seconds: number | null;
   companies: { name: string } | Array<{ name: string }>;
 };
 
@@ -31,7 +33,7 @@ type Answer = {
   id: string;
   question_id: string;
   user_answer_text: string;
-  is_followup: boolean;
+  follow_up_index: number;   // 0 = initial answer, 1 = first follow-up, 2 = second follow-up
   created_at: string;
 };
 
@@ -85,8 +87,8 @@ function ScorePill({ score }: { score: number }) {
 // ── Single question card ──────────────────────────────────────────────────────
 
 function QuestionCard({ q, index }: { q: QuestionWithData; index: number }) {
-  const mainAnswers = q.answers.filter((a) => !a.is_followup);
-  const followUps = q.answers.filter((a) => a.is_followup);
+  const mainAnswers = q.answers.filter((a) => a.follow_up_index === 0);
+  const followUps   = q.answers.filter((a) => a.follow_up_index > 0);
 
   return (
     <div className="rounded-2xl border border-border bg-white overflow-hidden">
@@ -243,6 +245,11 @@ export default function ReviewPage({ params }: { params: { id: string } }) {
   const name = companyName(session);
   const scores = questions.map((q) => q.feedback?.score).filter((s): s is number => s != null);
   const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+  const durationLabel = session.duration_seconds
+    ? session.duration_seconds < 60
+      ? `${session.duration_seconds}s`
+      : `${Math.round(session.duration_seconds / 60)} min`
+    : null;
 
   return (
     <main className="max-w-2xl mx-auto px-6 py-16">
@@ -265,8 +272,9 @@ export default function ReviewPage({ params }: { params: { id: string } }) {
           </div>
           <p className="text-muted-foreground text-sm">{session.role} · {formatDate(session.started_at)}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {questions.length} question{questions.length !== 1 ? "s" : ""}
+            {session.question_count} question{session.question_count !== 1 ? "s" : ""}
             {scores.length > 0 && ` · ${scores.length} scored`}
+            {durationLabel && ` · ${durationLabel}`}
           </p>
         </div>
       </div>

@@ -16,6 +16,7 @@ type SessionRow = {
   status: string;
   started_at: string;
   custom_company_name: string | null;
+  question_count: number;
   companies: { name: string } | Array<{ name: string }>;
   feedback: Array<{ score: number | null }>;
 };
@@ -75,7 +76,7 @@ export default function HistoryPage() {
       if (!session) { router.replace("/login"); return; }
       supabase
         .from("sessions")
-        .select("id, role, status, started_at, custom_company_name, companies(name), feedback(score)")
+        .select("id, role, status, started_at, custom_company_name, question_count, companies(name), feedback(score)")
         .order("started_at", { ascending: false })
         .then(({ data }) => {
           setSessions((data as SessionRow[]) ?? []);
@@ -142,7 +143,7 @@ export default function HistoryPage() {
           {sessions.map((s) => {
             const score = avgScore(s.feedback);
             const name = companyName(s);
-            const questionCount = s.feedback.length;
+            const questionCount = s.question_count;
             const isConfirming = confirmDelete === s.id;
             const isDeleting = deleting === s.id;
 

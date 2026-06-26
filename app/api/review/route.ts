@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     // Fetch session (must belong to this user)
     const { data: session, error: sessionErr } = await supabase
       .from("sessions")
-      .select("id, role, status, started_at, custom_company_name, companies(name)")
+      .select("id, role, status, started_at, custom_company_name, question_count, duration_seconds, companies(name)")
       .eq("id", sessionId)
       .eq("user_id", user.id)
       .single();
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
     if (questionList.length > 0) {
       const { data } = await supabase
         .from("answers")
-        .select("id, question_id, user_answer_text, is_followup, created_at")
+        .select("id, question_id, user_answer_text, follow_up_index, created_at")
         .in("question_id", questionList.map((q) => q.id))
         .order("created_at");
       answers = data ?? [];
