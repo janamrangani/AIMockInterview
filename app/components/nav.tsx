@@ -46,20 +46,19 @@ export default function Nav() {
   if (pathname === "/login") return null;
 
   const isLoggedIn = !!userEmail;
-  const isPublic = pathname === "/";
   const initial = userEmail ? userEmail[0].toUpperCase() : "?";
 
   return (
     <header className="border-b border-zinc-100 bg-white/95 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
         <Link
-          href={isLoggedIn ? "/dashboard" : "/"}
+          href="/"
           className="font-bold text-sm tracking-tight text-foreground"
         >
           InterviewAI
         </Link>
 
-        {isPublic && !isLoggedIn && authChecked && (
+        {!isLoggedIn && authChecked && (
           <nav className="flex items-center gap-6">
             <Link
               href="/pricing"
@@ -110,6 +109,15 @@ export default function Nav() {
               )}
             >
               Kit
+            </Link>
+            <Link
+              href="/pricing"
+              className={cn(
+                "text-sm transition-colors",
+                pathname === "/pricing" ? "text-foreground font-medium" : "text-zinc-500 hover:text-foreground"
+              )}
+            >
+              Pricing
             </Link>
             <Link
               href="/start"
