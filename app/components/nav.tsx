@@ -1,10 +1,8 @@
 "use client";
-// app/components/nav.tsx
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 function getSupabase() {
@@ -30,7 +28,6 @@ export default function Nav() {
     });
   }, []);
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -53,51 +50,45 @@ export default function Nav() {
   const initial = userEmail ? userEmail[0].toUpperCase() : "?";
 
   return (
-    <header className="border-b border-border bg-background/90 backdrop-blur-md sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        {/* Logo */}
+    <header className="border-b border-zinc-100 bg-white/95 backdrop-blur-sm sticky top-0 z-50">
+      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
         <Link
           href={isLoggedIn ? "/dashboard" : "/"}
-          className="font-bold text-base tracking-tight text-foreground"
+          className="font-bold text-sm tracking-tight text-foreground"
         >
           InterviewAI
         </Link>
 
-        {/* Public nav — only when not logged in */}
         {isPublic && !isLoggedIn && authChecked && (
-          <nav className="flex items-center gap-1">
+          <nav className="flex items-center gap-6">
             <Link
               href="/pricing"
-              className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-muted-foreground")}
+              className="text-sm text-zinc-500 hover:text-foreground transition-colors"
             >
               Pricing
             </Link>
             <Link
               href="/login"
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "sm" }),
-                "text-muted-foreground ml-1"
-              )}
+              className="text-sm text-zinc-500 hover:text-foreground transition-colors"
             >
               Sign in
             </Link>
             <Link
               href="/login"
-              className={cn(buttonVariants({ size: "sm" }), "ml-2")}
+              className="text-sm font-medium bg-foreground text-background px-4 py-1.5 rounded-full hover:opacity-80 transition-opacity"
             >
-              Get started →
+              Get started
             </Link>
           </nav>
         )}
 
-        {/* Auth nav — when logged in on any page */}
         {isLoggedIn && (
-          <nav className="flex items-center gap-1">
+          <nav className="flex items-center gap-5">
             <Link
               href="/dashboard"
               className={cn(
-                buttonVariants({ variant: "ghost", size: "sm" }),
-                pathname === "/dashboard" ? "text-foreground font-medium" : "text-muted-foreground"
+                "text-sm transition-colors",
+                pathname === "/dashboard" ? "text-foreground font-medium" : "text-zinc-500 hover:text-foreground"
               )}
             >
               Dashboard
@@ -105,10 +96,8 @@ export default function Nav() {
             <Link
               href="/history"
               className={cn(
-                buttonVariants({ variant: "ghost", size: "sm" }),
-                pathname === "/history"
-                  ? "text-foreground font-medium"
-                  : "text-muted-foreground"
+                "text-sm transition-colors",
+                pathname === "/history" ? "text-foreground font-medium" : "text-zinc-500 hover:text-foreground"
               )}
             >
               History
@@ -116,71 +105,59 @@ export default function Nav() {
             <Link
               href="/kit"
               className={cn(
-                buttonVariants({ variant: "ghost", size: "sm" }),
-                pathname === "/kit"
-                  ? "text-foreground font-medium"
-                  : "text-muted-foreground"
+                "text-sm transition-colors",
+                pathname === "/kit" ? "text-foreground font-medium" : "text-zinc-500 hover:text-foreground"
               )}
             >
               Kit
             </Link>
             <Link
-              href="/pricing"
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "sm" }),
-                pathname === "/pricing"
-                  ? "text-foreground font-medium"
-                  : "text-muted-foreground"
-              )}
-            >
-              Pricing
-            </Link>
-            <Link
               href="/start"
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "sm" }),
-                pathname === "/start"
-                  ? "text-foreground font-medium"
-                  : "text-muted-foreground"
-              )}
+              className="text-sm font-medium bg-foreground text-background px-4 py-1.5 rounded-full hover:opacity-80 transition-opacity"
             >
               New interview
             </Link>
 
-            {/* Profile avatar + dropdown */}
-            <div className="relative ml-2" ref={dropdownRef}>
+            <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen((o) => !o)}
-                className="w-8 h-8 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center hover:bg-indigo-700 transition-colors"
+                className="w-7 h-7 rounded-full bg-zinc-900 text-white text-xs font-bold flex items-center justify-center hover:bg-zinc-700 transition-colors"
               >
                 {initial}
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 top-10 w-56 rounded-xl border border-border bg-white shadow-lg py-1 z-50">
+                <div className="absolute right-0 top-9 w-52 rounded-xl border border-zinc-100 bg-white shadow-lg shadow-zinc-100/80 py-1 z-50">
                   {userEmail && (
-                    <div className="px-4 py-2.5 border-b border-border">
-                      <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
+                    <div className="px-4 py-2.5 border-b border-zinc-100">
+                      <p className="text-xs text-zinc-500 truncate">{userEmail}</p>
                     </div>
                   )}
                   <Link
                     href="/profile"
                     onClick={() => setDropdownOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"
+                    className="flex items-center px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
                   >
                     Profile &amp; Resume
                   </Link>
                   <Link
                     href="/history"
                     onClick={() => setDropdownOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"
+                    className="flex items-center px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
                   >
                     Session history
                   </Link>
-                  <div className="border-t border-border mt-1 pt-1">
+                  <Link
+                    href="/pricing"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+                  >
+                    Pricing
+                  </Link>
+                  <div className="border-t border-zinc-100 mt-1 pt-1">
                     <button
                       onClick={signOut}
-                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
                     >
                       Sign out
                     </button>

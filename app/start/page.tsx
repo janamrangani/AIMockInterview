@@ -92,9 +92,9 @@ export default function StartPage() {
 
   return (
     <main className="max-w-lg mx-auto px-6 py-16">
-      <div className="mb-8">
+      <div className="mb-10">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Start a mock interview</h1>
-        <p className="text-muted-foreground">
+        <p className="text-zinc-500">
           Pick your target company and the role you're interviewing for.
         </p>
       </div>
@@ -103,7 +103,7 @@ export default function StartPage() {
         <div className="space-y-2">
           <label className="text-sm font-medium">Company</label>
           <Select value={companyId} onValueChange={(v) => { setCompanyId(v ?? ""); setCustomCompanyName(""); }} required>
-            <SelectTrigger>
+            <SelectTrigger className="border-zinc-200 rounded-lg">
               <SelectValue placeholder="Select a company" />
             </SelectTrigger>
             <SelectContent>
@@ -118,6 +118,7 @@ export default function StartPage() {
               value={customCompanyName}
               onChange={(e) => setCustomCompanyName(e.target.value)}
               placeholder="Company name (e.g. Palantir, Snowflake)"
+              className="border-zinc-200 rounded-lg"
               autoFocus
             />
           )}
@@ -129,16 +130,14 @@ export default function StartPage() {
             value={role}
             onChange={(e) => setRole(e.target.value)}
             placeholder="e.g. SWE Intern, New Grad SWE, Product Manager"
+            className="border-zinc-200 rounded-lg"
             required
           />
         </div>
 
         {error && (
-          <div className={capReached
-            ? "rounded-lg border border-amber-200 bg-amber-50 p-4"
-            : ""
-          }>
-            <p className={`text-sm ${capReached ? "text-amber-800" : "text-destructive"}`}>
+          <div className={capReached ? "rounded-lg border border-amber-200 bg-amber-50 p-4" : ""}>
+            <p className={`text-sm ${capReached ? "text-amber-800" : "text-red-500"}`}>
               {error}
             </p>
             {capReached && (
@@ -152,7 +151,7 @@ export default function StartPage() {
           </div>
         )}
 
-        <Button type="submit" disabled={!canSubmit} className="w-full" size="lg">
+        <Button type="submit" disabled={!canSubmit} className="w-full rounded-full" size="lg">
           {submitting ? "Starting…" : "Start interview →"}
         </Button>
       </form>

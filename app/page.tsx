@@ -5,17 +5,9 @@ import {
   Check, X, CheckCircle2, XCircle,
   type LucideIcon,
 } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 // ── Data ──────────────────────────────────────────────────────────────────
-
-const stats = [
-  { value: "4",     label: "Top companies supported" },
-  { value: "< 30s", label: "To get a real question" },
-  { value: "$17",   label: "One-time, no subscription" },
-  { value: "7",     label: "Countdown Kit documents" },
-];
 
 const companies = [
   "Amazon", "Google", "Meta", "Microsoft", "Apple", "Netflix", "Uber", "Airbnb",
@@ -24,10 +16,10 @@ const companies = [
 ];
 
 const steps = [
-  { step: "01", title: "Pick your company and role",  desc: "Choose Amazon, Google, Meta, or Microsoft. Tell us the role you're targeting." },
-  { step: "02", title: "Answer a real question",       desc: "Behavioral or technical — calibrated to how that company actually interviews." },
-  { step: "03", title: "Get follow-ups",               desc: "AI probes deeper when your answer needs more — up to 2 rounds, like a real interviewer." },
-  { step: "04", title: "See your score and gaps",      desc: "Instant 1–10 score with strengths and exactly what to say next time." },
+  { n: "01", title: "Pick your company and role",  desc: "Choose from 20 top companies. Tell us the role you're targeting." },
+  { n: "02", title: "Answer a real question",       desc: "Behavioral or technical — calibrated to how that company actually interviews." },
+  { n: "03", title: "Get follow-ups",               desc: "AI probes deeper when your answer needs more — up to 2 rounds, like a real interviewer." },
+  { n: "04", title: "See your score and gaps",      desc: "Instant 1–10 score with strengths and exactly what to say next time." },
 ];
 
 const features: { Icon: LucideIcon; label: string; desc: string }[] = [
@@ -56,7 +48,7 @@ const features: { Icon: LucideIcon; label: string; desc: string }[] = [
 const countdownKit: { Icon: LucideIcon; title: string; desc: string }[] = [
   { Icon: Briefcase,     title: "LinkedIn rewrite",            desc: "Headline + About section optimised for your target role and company." },
   { Icon: Mic,           title: '"Tell me about yourself"',    desc: "A polished, company-calibrated opening pitch you can deliver cold." },
-  { Icon: HelpCircle,    title: "Questions to ask",            desc: "Smart, role-specific questions that make you sound prepared — because you are." },
+  { Icon: HelpCircle,    title: "Questions to ask",            desc: "Smart, role-specific questions that make you sound prepared." },
   { Icon: BookMarked,    title: "3 STAR stories",              desc: "Structured behavioral answers built from your own experience, impact-first." },
   { Icon: Mail,          title: "Thank-you email",             desc: "Send within 24h. Keeps you top of mind without sounding desperate." },
   { Icon: Banknote,      title: "Salary negotiation",          desc: "Specific talking points and counter-offer language for your level and company." },
@@ -67,17 +59,17 @@ const testimonials = [
   {
     quote: "I'd been grinding LeetCode for weeks. This was the first time I actually practised answering Amazon's questions the way they ask them. Got the offer.",
     name: "Priya S.",
-    role: "SWE Intern offer — Amazon",
+    role: "SWE Intern — Amazon",
   },
   {
-    quote: "The follow-up questions were brutal in the best way. My real interviewer asked almost the exact same one. I knew exactly what to say because I'd already done it.",
+    quote: "The follow-up questions were brutal in the best way. My real interviewer asked almost the exact same one. I knew exactly what to say.",
     name: "Marcus T.",
     role: "APM candidate — Google",
   },
   {
     quote: "The Countdown Kit alone was worth it. My LinkedIn rewrite got three recruiter messages within a week. That's never happened before.",
     name: "Jamie L.",
-    role: "New Grad SWE candidate — Meta",
+    role: "New Grad SWE — Meta",
   },
 ];
 
@@ -88,19 +80,15 @@ const faqs = [
   },
   {
     q: "What's the difference between Free and the Interview Pack?",
-    a: "Free gives you 2 mock interview sessions per calendar month with basic scored feedback — enough to try it out. The Interview Pack ($17 one-time) gives you 5 sessions in 30 days, full strengths + gaps feedback, adaptive follow-ups, session history, and all 7 Countdown Kit documents.",
+    a: "Free gives you 2 mock interview sessions per calendar month with basic scored feedback. The Interview Pack ($17 one-time) gives you 5 sessions in 30 days, full strengths + gaps feedback, adaptive follow-ups, session history, and all 7 Countdown Kit documents.",
   },
   {
     q: "What exactly is in the Countdown Kit?",
-    a: "Seven AI-generated documents tailored to your target company and role: a LinkedIn headline/About rewrite, a 'Tell me about yourself' script, custom questions to ask the interviewer, 3 STAR stories, a thank-you email template, salary negotiation talking points, and a day-of logistics checklist.",
+    a: "Seven AI-generated documents: a LinkedIn headline/About rewrite, a 'Tell me about yourself' script, custom questions to ask the interviewer, 3 STAR stories, a thank-you email template, salary negotiation talking points, and a day-of logistics checklist.",
   },
   {
     q: "How are the questions calibrated to each company?",
-    a: "Each company has a detailed interview style profile — Amazon's Leadership Principles, Google's Googleyness criteria, Meta's execution values, Microsoft's growth mindset culture. The AI uses this context to generate questions and evaluate your answers against the bar that company actually applies.",
-  },
-  {
-    q: "What if I don't have an interview scheduled yet?",
-    a: "The free plan is perfect for that. Use 2 sessions a month to stay sharp, and grab the Interview Pack when you have something lined up.",
+    a: "Each company has a detailed interview style profile — Amazon's Leadership Principles, Google's Googleyness criteria, Meta's execution values, and more. The AI uses this to generate questions and evaluate your answers against the bar that company actually applies.",
   },
   {
     q: "Do I need to download anything?",
@@ -108,113 +96,83 @@ const faqs = [
   },
 ];
 
-// ── Shared icon container styles ──────────────────────────────────────────
-
-function IconBox({ Icon, dark = false }: { Icon: LucideIcon; dark?: boolean }) {
-  return (
-    <div className={cn(
-      "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-      dark
-        ? "bg-indigo-500/10 border border-indigo-500/20 text-indigo-400"
-        : "bg-indigo-50 border border-indigo-100 text-indigo-600"
-    )}>
-      <Icon className="w-5 h-5" />
-    </div>
-  );
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────
 
 export default function Home() {
   return (
     <div className="flex flex-col flex-1">
 
-      {/* ── Hero (dark) ─────────────────────────────────────────────── */}
-      <section className="relative bg-zinc-950 text-white overflow-hidden">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-indigo-600/20 blur-[120px]" />
-          <div className="absolute top-20 right-[-100px] w-[400px] h-[400px] rounded-full bg-violet-600/15 blur-[100px]" />
-          <div className="absolute bottom-[-80px] left-1/2 -translate-x-1/2 w-[700px] h-[300px] rounded-full bg-indigo-500/10 blur-[80px]" />
-        </div>
-
-        <div className="relative max-w-6xl mx-auto px-6 pt-24 pb-20 flex flex-col items-center text-center">
-          <div className="inline-flex items-center gap-2 border border-white/10 bg-white/5 backdrop-blur-sm text-indigo-300 text-xs font-semibold px-4 py-1.5 rounded-full mb-8 tracking-widest uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+      {/* ── Hero ──────────────────────────────────────────────────────── */}
+      <section className="bg-white px-6 pt-20 pb-16">
+        <div className="max-w-4xl mx-auto">
+          <div className="inline-flex items-center gap-2 border border-zinc-200 text-zinc-500 text-xs font-medium px-3.5 py-1.5 rounded-full mb-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             Interview Pack — $17 one-time · No subscription
           </div>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05] max-w-3xl mb-6">
-            The unfair{" "}
-            <span className="bg-gradient-to-r from-indigo-300 via-violet-300 to-indigo-400 bg-clip-text text-transparent">
-              interview advantage
-            </span>
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05] mb-6 text-foreground max-w-3xl">
+            The unfair interview advantage.
           </h1>
 
-          <p className="text-zinc-400 text-lg sm:text-xl max-w-xl leading-relaxed mb-10">
-            Real questions calibrated to your target company, AI that follows up
-            like a real interviewer, and honest feedback — so you walk in knowing
-            exactly what to say.
+          <p className="text-zinc-500 text-lg sm:text-xl max-w-xl leading-relaxed mb-10">
+            Real questions calibrated to your target company, AI that follows up like a real interviewer, and honest feedback — so you walk in knowing exactly what to say.
           </p>
 
-          <div className="flex items-center gap-3 flex-wrap justify-center mb-14">
+          <div className="flex items-center gap-3 flex-wrap mb-16">
             <Link
               href="/pricing"
-              className={cn(buttonVariants({ size: "lg" }), "shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-shadow")}
+              className="inline-flex items-center h-11 px-6 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-80 transition-opacity"
             >
               Get the Interview Pack — $17 →
             </Link>
             <Link
               href="/login"
-              className="inline-flex items-center h-11 px-6 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-colors"
+              className="inline-flex items-center h-11 px-6 rounded-full border border-zinc-200 text-foreground text-sm font-medium hover:bg-zinc-50 transition-colors"
             >
               Try free first
             </Link>
           </div>
 
-          <div className="w-full max-w-2xl grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.06] rounded-2xl overflow-hidden border border-white/[0.06]">
-            {stats.map((s) => (
-              <div key={s.label} className="bg-zinc-950 px-5 py-5 text-center">
-                <p className="text-2xl font-bold text-white mb-1">{s.value}</p>
-                <p className="text-xs text-zinc-500 leading-tight">{s.label}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
+            {[
+              { value: "20+",   label: "Companies supported" },
+              { value: "< 30s", label: "To get a real question" },
+              { value: "$17",   label: "One-time, no subscription" },
+              { value: "7",     label: "Countdown Kit documents" },
+            ].map((s) => (
+              <div key={s.label}>
+                <p className="text-2xl font-bold text-foreground tabular-nums">{s.value}</p>
+                <p className="text-xs text-zinc-500 mt-1 leading-tight">{s.label}</p>
               </div>
             ))}
           </div>
         </div>
-
-        <div className="relative border-t border-white/[0.06] py-4 overflow-hidden">
-          <div className="flex items-center gap-3 w-max animate-marquee">
-            {[...companies, ...companies].map((c, i) => (
-              <span key={i} className="text-xs font-semibold text-zinc-400 border border-white/10 bg-white/5 px-3 py-1.5 rounded-full whitespace-nowrap">
-                {c}
-              </span>
-            ))}
-          </div>
-          {/* Fade edges */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-zinc-950 to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-zinc-950 to-transparent" />
-        </div>
       </section>
 
-      {/* ── Social proof ─────────────────────────────────────────────── */}
-      <section className="bg-white border-b border-border px-6 py-20">
+      {/* ── Marquee ──────────────────────────────────────────────────── */}
+      <div className="border-y border-zinc-100 py-3.5 overflow-hidden bg-white">
+        <div className="flex items-center gap-3 w-max animate-marquee">
+          {[...companies, ...companies].map((c, i) => (
+            <span key={i} className="text-xs text-zinc-400 font-medium whitespace-nowrap px-1">
+              {c}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Testimonials ─────────────────────────────────────────────── */}
+      <section className="bg-zinc-50 px-6 py-20 border-b border-zinc-100">
         <div className="max-w-5xl mx-auto">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center mb-12">
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 text-center mb-12">
             What candidates say
           </p>
-          <div className="grid sm:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-3 gap-5">
             {testimonials.map((t) => (
-              <div key={t.name} className="rounded-2xl border border-border bg-white p-6 flex flex-col gap-5">
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-4 h-4 text-amber-400 fill-amber-400" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-sm leading-relaxed text-foreground flex-1">"{t.quote}"</p>
+              <div key={t.name} className="rounded-2xl bg-white border border-zinc-100 p-6 flex flex-col gap-4">
+                <p className="text-sm leading-relaxed text-zinc-700 flex-1">"{t.quote}"</p>
                 <div>
-                  <p className="text-sm font-semibold">{t.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t.role}</p>
+                  <p className="text-sm font-semibold text-foreground">{t.name}</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">{t.role}</p>
                 </div>
               </div>
             ))}
@@ -222,50 +180,128 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Competitive positioning ──────────────────────────────────── */}
-      <section className="bg-zinc-950 text-white px-6 py-20 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-0 w-[500px] h-[400px] rounded-full bg-indigo-600/10 blur-[120px]" />
+      {/* ── How it works ─────────────────────────────────────────────── */}
+      <section className="bg-white px-6 py-20 border-b border-zinc-100">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-3 text-center">
+            How it works
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-center mb-16">
+            Four steps. Real prep.
+          </h2>
+          <div className="grid sm:grid-cols-2 gap-x-16 gap-y-10">
+            {steps.map((s) => (
+              <div key={s.n} className="flex gap-5">
+                <span className="text-4xl font-bold text-zinc-100 leading-none flex-shrink-0 select-none tabular-nums">{s.n}</span>
+                <div className="pt-1">
+                  <p className="font-semibold text-foreground mb-1.5">{s.title}</p>
+                  <p className="text-sm text-zinc-500 leading-relaxed">{s.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="relative max-w-5xl mx-auto">
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 text-center mb-3">
+      </section>
+
+      {/* ── Product preview ──────────────────────────────────────────── */}
+      <section className="bg-zinc-50 px-6 py-20 border-b border-zinc-100">
+        <div className="max-w-2xl mx-auto">
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-3 text-center">
+            See it in action
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-center mb-10">
+            A full interview loop in your browser.
+          </h2>
+
+          <div className="rounded-2xl border border-zinc-200 bg-white overflow-hidden">
+            <div className="border-b border-zinc-100 bg-zinc-50 px-5 py-3 flex items-center gap-3">
+              <div className="flex gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-zinc-200" />
+                <span className="w-2.5 h-2.5 rounded-full bg-zinc-200" />
+                <span className="w-2.5 h-2.5 rounded-full bg-zinc-200" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center rounded-full border border-zinc-200 text-zinc-500 text-xs font-medium px-2.5 py-0.5">
+                  behavioral
+                </span>
+                <span className="text-xs text-zinc-400">Amazon · SWE Intern</span>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="rounded-xl border border-zinc-100 bg-zinc-50 p-5">
+                <p className="text-sm font-semibold leading-relaxed text-foreground">
+                  Tell me about a time you had to deliver a project under a tight deadline. How did you prioritize what mattered most?
+                </p>
+              </div>
+              <div className="rounded-xl border border-zinc-100 p-4">
+                <p className="text-xs text-zinc-400 mb-2">Your answer</p>
+                <p className="text-sm text-zinc-600 italic leading-relaxed">
+                  "In my last internship, I had three days to ship a feature before the release. I drew up a quick MoSCoW list, cut two edge cases, and shipped the core on time…"
+                </p>
+              </div>
+              <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
+                <span className="text-xs font-medium text-amber-600 mb-2 inline-block">
+                  Follow-up
+                </span>
+                <p className="text-sm font-medium text-foreground leading-relaxed">
+                  What was the measurable outcome of shipping on time — and what would have happened if you'd missed it?
+                </p>
+              </div>
+              <div className="flex items-start gap-4 pt-1">
+                <div className="w-11 h-11 rounded-full bg-foreground ring-4 ring-zinc-100 flex items-center justify-center text-background font-bold text-xs flex-shrink-0">
+                  8/10
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div>
+                    <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-0.5">Strengths</p>
+                    <p className="text-sm text-zinc-500">Clear ownership, structured prioritization, shipped on time.</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-orange-500 uppercase tracking-wide mb-0.5">To improve</p>
+                    <p className="text-sm text-zinc-500">Quantify the impact — what was the business outcome?</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Why not just use ─────────────────────────────────────────── */}
+      <section className="bg-white px-6 py-20 border-b border-zinc-100">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 text-center mb-3">
             Why not just use…
           </p>
-          <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-14 tracking-tight">
-            Everything else leaves you guessing
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground text-center mb-14 tracking-tight">
+            Everything else leaves you guessing.
           </h2>
 
           <div className="grid sm:grid-cols-3 gap-4">
-            {/* Generic prep */}
-            <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6">
+            <div className="rounded-2xl border border-zinc-100 bg-zinc-50 p-6">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                  <XCircle className="w-4 h-4 text-red-400" />
-                </div>
-                <p className="font-semibold text-white text-sm">Generic prep sites</p>
+                <XCircle className="w-4 h-4 text-zinc-400" />
+                <p className="font-semibold text-sm text-foreground">Generic prep sites</p>
               </div>
               <ul className="space-y-3">
                 {[
                   "Same questions for every company",
                   "No follow-ups, no dynamic pressure",
                   "No feedback on your actual answers",
-                  "You don't know what a 7/10 answer looks like",
+                  "You don't know what a 7/10 looks like",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-zinc-500">
-                    <X className="w-3.5 h-3.5 text-red-500 mt-0.5 flex-shrink-0" />
+                    <X className="w-3.5 h-3.5 text-zinc-300 mt-0.5 flex-shrink-0" />
                     {item}
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Human mocks */}
-            <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6">
+            <div className="rounded-2xl border border-zinc-100 bg-zinc-50 p-6">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                  <XCircle className="w-4 h-4 text-red-400" />
-                </div>
-                <p className="font-semibold text-white text-sm">Human mock interviews</p>
+                <XCircle className="w-4 h-4 text-zinc-400" />
+                <p className="font-semibold text-sm text-foreground">Human mock interviews</p>
               </div>
               <ul className="space-y-3">
                 {[
@@ -275,20 +311,17 @@ export default function Home() {
                   "Not available at 11pm the night before",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-zinc-500">
-                    <X className="w-3.5 h-3.5 text-red-500 mt-0.5 flex-shrink-0" />
+                    <X className="w-3.5 h-3.5 text-zinc-300 mt-0.5 flex-shrink-0" />
                     {item}
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* InterviewAI */}
-            <div className="rounded-2xl border border-indigo-500/30 bg-indigo-500/[0.05] p-6">
+            <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-6">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
-                  <CheckCircle2 className="w-4 h-4 text-indigo-400" />
-                </div>
-                <p className="font-semibold text-white text-sm">InterviewAI</p>
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <p className="font-semibold text-sm text-white">InterviewAI</p>
               </div>
               <ul className="space-y-3">
                 {[
@@ -308,253 +341,166 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Product preview ─────────────────────────────────────────── */}
-      <section className="bg-zinc-900 px-6 py-20">
-        <div className="max-w-3xl mx-auto">
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-3 text-center">
-            See it in action
-          </p>
-          <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-10 tracking-tight">
-            A full interview loop in your browser
-          </h2>
-
-          <div className="rounded-2xl border border-white/10 bg-zinc-950 overflow-hidden shadow-2xl shadow-black/40">
-            <div className="border-b border-white/[0.07] bg-white/[0.03] px-5 py-3 flex items-center gap-3">
-              <div className="flex gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-                <span className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-                <span className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold px-2.5 py-0.5">
-                  behavioral
-                </span>
-                <span className="text-xs text-zinc-500">Amazon · SWE Intern</span>
-              </div>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/[0.07] p-5">
-                <p className="text-sm font-semibold leading-relaxed text-white">
-                  Tell me about a time you had to deliver a project under a tight deadline. How did you prioritize what mattered most?
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-4">
-                <p className="text-xs text-zinc-500 mb-2">Your answer</p>
-                <p className="text-sm text-zinc-300 italic leading-relaxed">
-                  "In my last internship, I had three days to ship a feature before the release. I drew up a quick MoSCoW list, cut two edge cases, and shipped the core on time…"
-                </p>
-              </div>
-              <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.05] p-4">
-                <span className="text-xs font-semibold bg-amber-400/15 text-amber-300 px-2 py-0.5 rounded-full mb-2 inline-block">
-                  Follow-up
-                </span>
-                <p className="text-sm font-medium text-white leading-relaxed">
-                  What was the measurable outcome of shipping on time — and what would have happened if you'd missed it?
-                </p>
-              </div>
-              <div className="flex items-start gap-4 pt-1">
-                <div className="w-12 h-12 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                  8/10
-                </div>
-                <div className="flex-1 space-y-2">
-                  <div>
-                    <p className="text-xs font-bold text-emerald-400 uppercase tracking-wide mb-0.5">Strengths</p>
-                    <p className="text-sm text-zinc-400">Clear ownership, structured prioritization, shipped on time.</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-orange-400 uppercase tracking-wide mb-0.5">To improve</p>
-                    <p className="text-sm text-zinc-400">Quantify the impact — what was the business outcome?</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── How it works ────────────────────────────────────────────── */}
-      <section className="bg-white px-6 py-20 border-b border-border">
+      {/* ── Features ─────────────────────────────────────────────────── */}
+      <section className="bg-zinc-50 px-6 py-20 border-b border-zinc-100">
         <div className="max-w-4xl mx-auto">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3 text-center">
-            How it works
-          </p>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-14">
-            Four steps. Real prep.
-          </h2>
-          <div className="grid sm:grid-cols-2 gap-6">
-            {steps.map((s) => (
-              <div key={s.step} className="rounded-2xl border border-border bg-white p-6 flex gap-5">
-                <span className="text-3xl font-bold text-indigo-100 leading-none flex-shrink-0 select-none">{s.step}</span>
-                <div>
-                  <p className="font-semibold mb-1.5">{s.title}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Features ────────────────────────────────────────────────── */}
-      <section className="bg-zinc-950 text-white px-6 py-20 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[500px] h-[400px] rounded-full bg-violet-600/10 blur-[120px]" />
-        </div>
-        <div className="relative max-w-4xl mx-auto">
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-3 text-center">
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-3 text-center">
             What you get
           </p>
-          <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-12 tracking-tight">
-            Built different from every prep tool you've tried
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground text-center mb-12 tracking-tight">
+            Built different from every prep tool you've tried.
           </h2>
           <div className="grid sm:grid-cols-2 gap-4">
             {features.map(({ Icon, label, desc }) => (
-              <div key={label} className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-6 hover:bg-white/[0.05] transition-colors">
-                <IconBox Icon={Icon} dark />
-                <p className="font-semibold mt-4 mb-2 text-white">{label}</p>
-                <p className="text-sm text-zinc-400 leading-relaxed">{desc}</p>
+              <div key={label} className="rounded-2xl border border-zinc-100 bg-white p-6 hover:border-zinc-200 transition-colors">
+                <Icon className="w-5 h-5 text-zinc-400 mb-4" />
+                <p className="font-semibold text-foreground mb-2">{label}</p>
+                <p className="text-sm text-zinc-500 leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Countdown Kit showcase ───────────────────────────────────── */}
-      <section className="bg-white px-6 py-20 border-b border-border">
+      {/* ── Countdown Kit ────────────────────────────────────────────── */}
+      <section className="bg-white px-6 py-20 border-b border-zinc-100">
         <div className="max-w-4xl mx-auto">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3 text-center">
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-3 text-center">
             Included in the Interview Pack
           </p>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-3">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-center mb-3">
             The Interview Countdown Kit
           </h2>
-          <p className="text-muted-foreground text-center max-w-md mx-auto mb-12">
-            Seven AI-generated documents tailored to your company and role.
-            Each one written before you walk in, not after.
+          <p className="text-zinc-500 text-center max-w-md mx-auto mb-12">
+            Seven AI-generated documents tailored to your company and role. Each one written before you walk in, not after.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-10">
             {countdownKit.map(({ Icon, title, desc }, i) => (
               <div
                 key={title}
                 className={cn(
-                  "rounded-2xl border border-border bg-white p-5 flex items-start gap-4",
+                  "rounded-2xl border border-zinc-100 bg-zinc-50 p-5 flex items-start gap-4",
                   i === 6 && "sm:col-span-2 lg:col-span-1"
                 )}
               >
-                <IconBox Icon={Icon} />
+                <Icon className="w-4 h-4 text-zinc-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-semibold text-sm mb-1">{title}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+                  <p className="font-semibold text-sm text-foreground mb-1">{title}</p>
+                  <p className="text-sm text-zinc-500 leading-relaxed">{desc}</p>
                 </div>
               </div>
             ))}
           </div>
 
           <div className="flex justify-center">
-            <Link href="/pricing" className={cn(buttonVariants({ size: "lg" }), "shadow-md shadow-indigo-100")}>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center h-11 px-6 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-80 transition-opacity"
+            >
               Get all 7 documents — $17 →
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ── Pricing teaser ──────────────────────────────────────────── */}
-      <section className="bg-muted/30 px-6 py-20 border-b border-border">
+      {/* ── Pricing ──────────────────────────────────────────────────── */}
+      <section className="bg-zinc-50 px-6 py-20 border-b border-zinc-100">
         <div className="max-w-4xl mx-auto">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3 text-center">
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-3 text-center">
             Pricing
           </p>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-center mb-3">
             Start free. Go all-in for $17.
           </h2>
-          <p className="text-muted-foreground text-center mb-12 max-w-md mx-auto">
+          <p className="text-zinc-500 text-center mb-12 max-w-md mx-auto">
             No subscription. No auto-renewal. One payment, 30 days, everything you need.
           </p>
 
-          <div className="grid sm:grid-cols-3 gap-5 mb-10">
-            <div className="rounded-2xl border border-border bg-white p-6 flex flex-col">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Free</p>
+          <div className="grid sm:grid-cols-3 gap-4 mb-8">
+            <div className="rounded-2xl border border-zinc-100 bg-white p-6 flex flex-col">
+              <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-4">Free</p>
               <p className="text-3xl font-bold mb-1">$0</p>
-              <p className="text-sm text-muted-foreground mb-6">2 sessions/month · No card needed</p>
-              <ul className="space-y-2.5 text-sm text-muted-foreground flex-1 mb-6">
-                {["2 mock sessions/month", "All 4 companies", "Scored feedback"].map((f) => (
+              <p className="text-sm text-zinc-500 mb-6">2 sessions/month · No card needed</p>
+              <ul className="space-y-2.5 text-sm text-zinc-500 flex-1 mb-6">
+                {["2 mock sessions/month", "All 20 companies", "Scored feedback"].map((f) => (
                   <li key={f} className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />{f}
                   </li>
                 ))}
               </ul>
-              <Link href="/login" className={cn(buttonVariants({ variant: "outline" }), "w-full justify-center")}>
+              <Link href="/login" className="inline-flex items-center justify-center h-10 px-5 rounded-full border border-zinc-200 text-sm font-medium hover:bg-zinc-50 transition-colors">
                 Start Free
               </Link>
             </div>
 
-            <div className="rounded-2xl border-2 border-indigo-500 bg-white p-6 flex flex-col relative shadow-xl shadow-indigo-100">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-semibold px-3.5 py-1 rounded-full whitespace-nowrap">
+            <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-6 flex flex-col relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-xs font-medium px-3.5 py-1 rounded-full whitespace-nowrap border border-zinc-700">
                 Most Popular
               </div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Interview Pack</p>
-              <p className="text-3xl font-bold mb-1">$17</p>
-              <p className="text-xs text-indigo-600 font-semibold mb-1">One-time payment</p>
-              <p className="text-sm text-muted-foreground mb-6">5 sessions · 30 days · all 7 Kit docs</p>
+              <p className="text-xs font-medium uppercase tracking-widest text-zinc-500 mb-4">Interview Pack</p>
+              <p className="text-3xl font-bold text-white mb-1">$17</p>
+              <p className="text-xs text-zinc-500 font-medium mb-1">One-time payment</p>
+              <p className="text-sm text-zinc-500 mb-6">5 sessions · 30 days · all 7 Kit docs</p>
               <ul className="space-y-2.5 text-sm flex-1 mb-6">
                 {["5 mock sessions (30 days)", "Full feedback + follow-ups", "All 7 Countdown Kit docs"].map((f) => (
                   <li key={f} className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />{f}
+                    <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                    <span className="text-zinc-300">{f}</span>
                   </li>
                 ))}
               </ul>
-              <Link href="/pricing" className={cn(buttonVariants(), "w-full justify-center shadow-md shadow-indigo-200")}>
+              <Link href="/pricing" className="inline-flex items-center justify-center h-10 px-5 rounded-full bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100 transition-colors">
                 Get the Pack →
               </Link>
             </div>
 
-            <div className="rounded-2xl border border-border bg-white p-6 flex flex-col opacity-60">
+            <div className="rounded-2xl border border-zinc-100 bg-white p-6 flex flex-col opacity-60">
               <div className="flex items-center gap-2 mb-4">
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Unlimited</p>
-                <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium">Soon</span>
+                <p className="text-xs font-medium uppercase tracking-widest text-zinc-400">Unlimited</p>
+                <span className="text-xs bg-zinc-100 text-zinc-500 px-2 py-0.5 rounded-full font-medium">Soon</span>
               </div>
               <p className="text-3xl font-bold mb-1">$19</p>
-              <p className="text-sm text-muted-foreground mb-6">Per month · Everything, forever</p>
-              <ul className="space-y-2.5 text-sm text-muted-foreground flex-1 mb-6">
+              <p className="text-sm text-zinc-500 mb-6">Per month · Everything, forever</p>
+              <ul className="space-y-2.5 text-sm text-zinc-500 flex-1 mb-6">
                 {["Unlimited sessions", "Everything in Pack"].map((f) => (
                   <li key={f} className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 flex-shrink-0" />{f}
                   </li>
                 ))}
               </ul>
-              <Link href="/pricing" className={cn(buttonVariants({ variant: "outline" }), "w-full justify-center")}>
+              <Link href="/pricing" className="inline-flex items-center justify-center h-10 px-5 rounded-full border border-zinc-200 text-sm font-medium">
                 Join waitlist →
               </Link>
             </div>
           </div>
 
-          <p className="text-center text-sm text-muted-foreground">
-            <Link href="/pricing" className="underline underline-offset-2 font-medium text-foreground hover:text-indigo-600 transition-colors">
+          <p className="text-center text-sm text-zinc-500">
+            <Link href="/pricing" className="underline underline-offset-2 font-medium text-foreground hover:text-zinc-600 transition-colors">
               See the full pricing breakdown →
             </Link>
           </p>
         </div>
       </section>
 
-      {/* ── FAQ ─────────────────────────────────────────────────────── */}
-      <section className="bg-white px-6 py-20 border-b border-border">
+      {/* ── FAQ ──────────────────────────────────────────────────────── */}
+      <section className="bg-white px-6 py-20 border-b border-zinc-100">
         <div className="max-w-2xl mx-auto">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3 text-center">
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-3 text-center">
             Questions
           </p>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-12">
-            Everything you need to know
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-center mb-12">
+            Everything you need to know.
           </h2>
-          <div className="space-y-1">
+          <div className="space-y-0">
             {faqs.map((faq) => (
-              <details key={faq.q} className="group border-b border-border last:border-0">
+              <details key={faq.q} className="group border-b border-zinc-100 last:border-0">
                 <summary className="flex items-center justify-between py-5 cursor-pointer list-none gap-4">
-                  <span className="font-semibold text-sm sm:text-base">{faq.q}</span>
-                  <span className="text-muted-foreground flex-shrink-0 text-lg leading-none transition-transform group-open:rotate-45">+</span>
+                  <span className="font-medium text-sm sm:text-base">{faq.q}</span>
+                  <span className="text-zinc-400 flex-shrink-0 text-xl leading-none transition-transform group-open:rotate-45 select-none">+</span>
                 </summary>
                 <div className="pb-5 -mt-1">
-                  <p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+                  <p className="text-sm text-zinc-500 leading-relaxed">{faq.a}</p>
                 </div>
               </details>
             ))}
@@ -562,28 +508,32 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Final CTA (dark) ────────────────────────────────────────── */}
-      <section className="relative bg-zinc-950 text-white px-6 py-24 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] rounded-full bg-indigo-600/15 blur-[100px]" />
-        </div>
-        <div className="relative max-w-2xl mx-auto text-center">
-          <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4">
+      {/* ── Final CTA ────────────────────────────────────────────────── */}
+      <section className="bg-zinc-950 text-white px-6 py-24">
+        <div className="max-w-2xl mx-auto text-center">
+          <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4 leading-[1.05]">
             The offer is yours to take.
           </h2>
-          <p className="text-zinc-400 text-lg mb-10 max-w-md mx-auto">
+          <p className="text-zinc-400 text-lg mb-10 max-w-md mx-auto leading-relaxed">
             Pick your company, answer a question, get real feedback. You'll know where you stand in under 2 minutes.
           </p>
           <div className="flex items-center gap-3 flex-wrap justify-center">
-            <Link href="/pricing" className={cn(buttonVariants({ size: "lg" }), "shadow-lg shadow-indigo-500/30")}>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center h-11 px-6 rounded-full bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100 transition-colors"
+            >
               Get the Interview Pack — $17 →
             </Link>
-            <Link href="/login" className="inline-flex items-center h-11 px-6 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-colors">
+            <Link
+              href="/login"
+              className="inline-flex items-center h-11 px-6 rounded-full border border-white/15 text-white text-sm font-medium hover:bg-white/10 transition-colors"
+            >
               Try free first
             </Link>
           </div>
         </div>
       </section>
+
     </div>
   );
 }
