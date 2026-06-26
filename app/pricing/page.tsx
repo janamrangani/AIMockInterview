@@ -4,7 +4,7 @@ import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import {
   Briefcase, Mic, HelpCircle, BookMarked, Mail, Banknote, ClipboardList,
-  Check, X, type LucideIcon,
+  Check, X, ArrowRight, type LucideIcon,
 } from "lucide-react";
 
 const kitDocs: { Icon: LucideIcon; title: string; desc: string }[] = [
@@ -24,7 +24,7 @@ function getSupabase() {
   );
 }
 
-function CheckoutButton() {
+function CheckoutButton({ className }: { className?: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,9 +49,9 @@ function CheckoutButton() {
       <button
         onClick={handleCheckout}
         disabled={loading}
-        className="w-full h-10 rounded-full bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60 transition-colors"
+        className={className ?? "w-full inline-flex items-center justify-center h-11 px-6 rounded-full bg-white text-foreground text-sm font-medium hover:bg-zinc-100 disabled:opacity-60 transition-colors"}
       >
-        {loading ? "Redirecting…" : "Get the Pack →"}
+        {loading ? "Redirecting…" : "Get the Interview Pack →"}
       </button>
       {error && <p className="text-xs text-red-400 mt-2 text-center">{error}</p>}
     </div>
@@ -75,30 +75,30 @@ function NotifyMeForm() {
 
   if (state === "done") {
     return (
-      <p className="text-sm text-center text-emerald-600 font-medium py-2.5 flex items-center justify-center gap-1.5">
+      <p className="text-sm text-emerald-600 font-medium flex items-center gap-1.5">
         <Check className="w-4 h-4" /> You're on the list.
       </p>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2">
+    <form onSubmit={handleSubmit} className="flex gap-2">
       <input
         type="email"
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="your@email.com"
-        className="flex h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-900"
+        className="flex-1 h-9 rounded-full border border-zinc-200 bg-white px-4 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground"
       />
       <button
         type="submit"
         disabled={state === "loading"}
-        className="w-full h-10 rounded-lg border border-zinc-200 text-sm font-medium hover:bg-zinc-50 disabled:opacity-60 transition-colors"
+        className="h-9 px-5 rounded-full border border-zinc-200 text-sm font-medium hover:bg-zinc-50 disabled:opacity-60 transition-colors whitespace-nowrap"
       >
-        {state === "loading" ? "Saving…" : "Notify Me"}
+        {state === "loading" ? "Saving…" : "Notify me"}
       </button>
-      {state === "error" && <p className="text-xs text-red-500 text-center">Something went wrong.</p>}
+      {state === "error" && <p className="text-xs text-red-500">Something went wrong.</p>}
     </form>
   );
 }
@@ -119,6 +119,19 @@ const packFeatures = [
   "Day-of logistics checklist",
 ];
 
+const freeFeatures = [
+  "2 mock interview sessions per month",
+  "Behavioral & technical questions",
+  "All 20 companies",
+  "Basic scored feedback",
+];
+
+const freeExcluded = [
+  "Full strengths + gaps feedback",
+  "Adaptive follow-ups",
+  "Interview Countdown Kit",
+];
+
 const faqs = [
   { q: "When does my Interview Pack expire?", a: "30 days from the date of purchase. Within that window you get 5 mock interview sessions and unlimited access to all Countdown Kit documents." },
   { q: "What's the Countdown Kit?", a: "Seven AI-generated job-search documents personalised to your target company and role: a LinkedIn headline/About rewrite, a 'Tell me about yourself' script, custom questions to ask the interviewer, 3 STAR stories, a thank-you email, salary negotiation talking points, and a day-of logistics checklist." },
@@ -132,148 +145,157 @@ export default function PricingPage() {
   return (
     <div className="bg-white flex flex-col flex-1">
 
-      {/* Header */}
-      <section className="pt-20 pb-16 px-6 text-center border-b border-zinc-100">
-        <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-6">
-          Simple, transparent pricing
-        </p>
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1] mb-4 max-w-xl mx-auto">
-          Everything you need to walk in ready.
-        </h1>
-        <p className="text-zinc-500 text-lg max-w-md mx-auto leading-relaxed">
-          Start free. Or grab the Interview Pack and go all-in for your next interview.
-        </p>
-      </section>
-
-      {/* Cards */}
-      <section className="px-6 py-20 border-b border-zinc-100">
-        <div className="max-w-4xl mx-auto grid sm:grid-cols-3 gap-5 items-start">
-
-          {/* Free */}
-          <div className="rounded-2xl border border-zinc-100 bg-zinc-50 p-7 flex flex-col gap-6">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-3">Free</p>
-              <div className="flex items-baseline gap-1.5 mb-2">
-                <span className="text-4xl font-bold">$0</span>
-                <span className="text-sm text-zinc-500">forever</span>
-              </div>
-              <p className="text-sm text-zinc-500 leading-relaxed">Two sessions a month to try it out. No card needed.</p>
-            </div>
-
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center h-10 px-5 rounded-full border border-zinc-200 bg-white text-sm font-medium hover:bg-zinc-50 transition-colors"
-            >
-              Start Free
-            </Link>
-
-            <ul className="space-y-2.5">
-              {["2 mock interview sessions per month", "Behavioral & technical questions", "All 20 companies", "Basic scored feedback"].map((f) => (
-                <li key={f} className="flex items-start gap-2.5 text-sm">
-                  <Check className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-foreground">{f}</span>
-                </li>
-              ))}
-              {["Full strengths + gaps feedback", "Adaptive follow-ups", "Interview Countdown Kit"].map((f) => (
-                <li key={f} className="flex items-start gap-2.5 text-sm opacity-40">
-                  <X className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Interview Pack */}
-          <div className="relative rounded-2xl border border-zinc-900 bg-zinc-950 p-7 flex flex-col gap-6">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-xs font-medium px-4 py-1 rounded-full whitespace-nowrap border border-zinc-700">
-              Most Popular
-            </div>
-
-            <div>
-              <p className="text-xs font-medium uppercase tracking-widest text-zinc-500 mb-3">Interview Pack</p>
-              <div className="flex items-baseline gap-1.5 mb-1">
-                <span className="text-4xl font-bold text-white">$17</span>
-                <span className="text-sm text-zinc-500">one-time</span>
-              </div>
-              <p className="text-xs text-zinc-400 font-medium mb-3">Got an interview coming up? Everything you need.</p>
-              <p className="text-sm text-zinc-500 leading-relaxed">5 sessions + the full Countdown Kit, valid for 30 days.</p>
-            </div>
-
-            <CheckoutButton />
-
-            <ul className="space-y-2.5">
-              {packFeatures.map((f) => (
-                <li key={f} className="flex items-start gap-2.5 text-sm">
-                  <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-zinc-300">{f}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Unlimited */}
-          <div className="rounded-2xl border border-zinc-100 bg-zinc-50 p-7 flex flex-col gap-6 opacity-60">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <p className="text-xs font-medium uppercase tracking-widest text-zinc-400">Unlimited</p>
-                <span className="text-xs font-medium bg-zinc-200 text-zinc-500 px-2 py-0.5 rounded-full">Coming soon</span>
-              </div>
-              <div className="flex items-baseline gap-1.5 mb-2">
-                <span className="text-4xl font-bold">$19</span>
-                <span className="text-sm text-zinc-500">per month</span>
-              </div>
-              <p className="text-sm text-zinc-500 leading-relaxed">Unlimited sessions and everything in the Pack, month after month.</p>
-            </div>
-
-            <NotifyMeForm />
-
-            <ul className="space-y-2.5">
-              {["Unlimited sessions", "Everything in Interview Pack", "Priority support"].map((f) => (
-                <li key={f} className="flex items-start gap-2.5 text-sm">
-                  <Check className="w-3.5 h-3.5 text-zinc-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-zinc-500">{f}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+      {/* ── Header ──────────────────────────────────────────────────── */}
+      <section className="pt-20 pb-16 px-6 border-b border-zinc-100">
+        <div className="max-w-3xl mx-auto">
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-4">Pricing</p>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.05] mb-4">
+            Walk in ready.<br />For $17.
+          </h1>
+          <p className="text-zinc-500 text-lg leading-relaxed max-w-md">
+            Start for free, or go all-in with one payment. No subscriptions. No auto-renewal.
+          </p>
         </div>
-
-        <p className="text-center text-sm text-zinc-500 mt-8">
-          No subscriptions. No auto-renewal. Pay once, use it when you need it.
-        </p>
       </section>
 
-      {/* What's in the Kit */}
+      {/* ── Plan cards ──────────────────────────────────────────────── */}
+      <section className="px-6 py-16 border-b border-zinc-100">
+        <div className="max-w-5xl mx-auto">
+
+          {/* Three plan cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+
+            {/* Free */}
+            <div className="rounded-2xl border border-zinc-100 bg-zinc-50 p-7 flex flex-col">
+              <div className="flex-1">
+                <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-5">Free</p>
+                <div className="mb-1">
+                  <span className="text-4xl font-bold">$0</span>
+                </div>
+                <p className="text-sm text-zinc-500 mb-7">Forever. No card required.</p>
+
+                <ul className="space-y-2.5 mb-7">
+                  {freeFeatures.map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-sm">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-foreground">{f}</span>
+                    </li>
+                  ))}
+                  {freeExcluded.map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-sm opacity-35">
+                      <X className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center h-10 px-5 rounded-full border border-zinc-200 bg-white text-sm font-medium hover:bg-zinc-100 transition-colors"
+              >
+                Start free
+              </Link>
+            </div>
+
+            {/* Interview Pack */}
+            <div className="rounded-2xl border border-foreground/20 bg-foreground p-7 flex flex-col relative">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-white text-foreground text-xs font-semibold px-3.5 py-1 rounded-full border border-zinc-100 whitespace-nowrap">
+                Most popular
+              </div>
+
+              <div className="flex-1">
+                <p className="text-xs font-medium uppercase tracking-widest text-white/50 mb-5">Interview Pack</p>
+                <div className="mb-1">
+                  <span className="text-4xl font-bold text-white">$17</span>
+                  <span className="text-sm text-white/50 ml-2">one-time</span>
+                </div>
+                <p className="text-sm text-white/60 mb-7">5 sessions + full Kit, 30 days.</p>
+
+                <ul className="space-y-2.5 mb-7">
+                  {packFeatures.map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-sm">
+                      <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                      <span className="text-white/80">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <CheckoutButton />
+            </div>
+
+            {/* Unlimited — coming soon */}
+            <div className="rounded-2xl border border-zinc-100 bg-zinc-50 p-7 flex flex-col opacity-60">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-5">
+                  <p className="text-xs font-medium uppercase tracking-widest text-zinc-400">Unlimited</p>
+                  <span className="text-xs font-medium bg-zinc-200 text-zinc-500 px-2 py-0.5 rounded-full">Soon</span>
+                </div>
+                <div className="mb-1">
+                  <span className="text-4xl font-bold">$19</span>
+                  <span className="text-sm text-zinc-500 ml-2">/ month</span>
+                </div>
+                <p className="text-sm text-zinc-500 mb-7">Unlimited sessions, everything forever.</p>
+
+                <ul className="space-y-2.5 mb-7">
+                  {["Unlimited sessions", "Everything in Interview Pack", "Priority support"].map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-sm">
+                      <Check className="w-3.5 h-3.5 text-zinc-400 mt-0.5 flex-shrink-0" />
+                      <span className="text-zinc-500">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <NotifyMeForm />
+            </div>
+          </div>
+
+          <p className="text-center text-xs text-zinc-400 mt-5 px-4">
+            No subscriptions · No auto-renewal · Secure checkout via Stripe
+          </p>
+        </div>
+      </section>
+
+      {/* ── What's in the Kit ───────────────────────────────────────── */}
       <section className="border-b border-zinc-100 py-20 px-6 bg-zinc-50">
-        <div className="max-w-2xl mx-auto">
-          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 text-center mb-3">
+        <div className="max-w-3xl mx-auto">
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-3 text-center">
             Interview Countdown Kit
           </p>
-          <h2 className="text-3xl font-bold tracking-tight text-center mb-3">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-center mb-3">
             Seven documents. One interview.
           </h2>
-          <p className="text-zinc-500 text-center mb-10">
+          <p className="text-zinc-500 text-center mb-10 max-w-md mx-auto">
             Each one is generated by AI and tailored to your target company and role.
           </p>
 
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="rounded-2xl border border-zinc-100 bg-white overflow-hidden divide-y divide-zinc-100">
             {kitDocs.map(({ Icon, title, desc }) => (
-              <div key={title} className="flex items-start gap-4 rounded-xl bg-white border border-zinc-100 p-5">
-                <Icon className="w-4 h-4 text-zinc-400 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-semibold text-sm mb-1">{title}</p>
-                  <p className="text-sm text-zinc-500 leading-relaxed">{desc}</p>
+              <div key={title} className="flex items-center gap-4 px-5 py-4">
+                <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center flex-shrink-0">
+                  <Icon className="w-3.5 h-3.5 text-zinc-500" />
                 </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm">{title}</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">{desc}</p>
+                </div>
+                <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
               </div>
             ))}
+          </div>
+
+          <div className="mt-8 text-center">
+            <CheckoutButton className="inline-flex items-center gap-2 h-11 px-8 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-80 disabled:opacity-60 transition-opacity" />
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
+      {/* ── FAQ ─────────────────────────────────────────────────────── */}
       <section className="py-20 px-6 bg-white border-b border-zinc-100">
         <div className="max-w-2xl mx-auto">
-          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 text-center mb-10">
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 text-center mb-12">
             Questions
           </p>
           <div className="space-y-0">
@@ -292,24 +314,27 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 px-6 text-center bg-zinc-950">
-        <h2 className="text-3xl font-bold tracking-tight mb-3 text-white">
-          Interview coming up?
-        </h2>
-        <p className="text-zinc-400 mb-8 max-w-sm mx-auto">
-          The Interview Pack is $17 once. No subscription. Walk in prepared.
-        </p>
-        <div className="flex items-center gap-3 justify-center flex-wrap">
-          <CheckoutButton />
-          <Link
-            href="/login"
-            className="inline-flex items-center h-10 px-6 rounded-full border border-white/15 text-white text-sm font-medium hover:bg-white/10 transition-colors"
-          >
-            Try free first
-          </Link>
+      {/* ── Final CTA ───────────────────────────────────────────────── */}
+      <section className="py-20 px-6 bg-zinc-50 border-b border-zinc-100">
+        <div className="max-w-xl mx-auto text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
+            Interview coming up?
+          </h2>
+          <p className="text-zinc-500 mb-8 leading-relaxed">
+            The Interview Pack is $17 once. No subscription. Walk in prepared.
+          </p>
+          <div className="flex items-center gap-3 justify-center flex-wrap">
+            <CheckoutButton className="inline-flex items-center gap-2 h-11 px-7 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-80 disabled:opacity-60 transition-opacity" />
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-1.5 h-11 px-6 rounded-full border border-zinc-200 text-sm font-medium hover:bg-zinc-100 transition-colors"
+            >
+              Try free first <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
       </section>
+
     </div>
   );
 }

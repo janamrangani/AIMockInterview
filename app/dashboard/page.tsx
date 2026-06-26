@@ -82,7 +82,7 @@ export default function DashboardPage() {
           {loading ? (
             <div className="h-10 w-64 bg-zinc-100 rounded-lg animate-pulse" />
           ) : (
-            <div className="flex items-end justify-between gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
                 <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-2">{planLabel}</p>
                 <h1 className="text-4xl font-bold tracking-tight">
@@ -100,7 +100,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Stats ────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-3 divide-x divide-zinc-100 border border-zinc-100 rounded-2xl mb-12 overflow-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-zinc-100 border border-zinc-100 rounded-2xl overflow-hidden mb-4">
           {loading ? (
             [...Array(3)].map((_, i) => (
               <div key={i} className="px-8 py-7">
@@ -123,6 +123,38 @@ export default function DashboardPage() {
             </>
           )}
         </div>
+
+        {/* ── Upgrade banner (free only) ───────────────────────────── */}
+        {!loading && data?.plan === "free" && (
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-zinc-100 bg-zinc-50 px-5 py-3.5 mb-10">
+            <p className="text-sm text-zinc-600">
+              You're on the <span className="font-medium text-foreground">free plan</span> — unlock full feedback, follow-ups &amp; Countdown Kit.
+            </p>
+            <Link
+              href="/pricing"
+              className="flex-shrink-0 inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:underline underline-offset-4"
+            >
+              Upgrade — $17 <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        )}
+
+        {/* ── Pack expiry notice ───────────────────────────────────── */}
+        {!loading && data?.plan === "pack" && data?.pack_expires_at && (
+          <div className="flex items-center gap-3 rounded-xl border border-zinc-100 bg-zinc-50 px-5 py-3.5 mb-10">
+            <span className="text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-full flex-shrink-0">Active</span>
+            <p className="text-sm text-zinc-500">
+              Interview Pack valid until{" "}
+              <span className="font-medium text-foreground">
+                {new Date(data.pack_expires_at).toLocaleDateString("en-US", { month: "long", day: "numeric" })}
+              </span>
+            </p>
+          </div>
+        )}
+
+        {!loading && (data?.plan === "admin" || (data?.plan !== "free" && data?.plan !== "pack")) && (
+          <div className="mb-10" />
+        )}
 
         {/* ── Two-column body ───────────────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -222,55 +254,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Plan card */}
-            {!loading && data?.plan === "free" && (
-              <div className="rounded-2xl border border-zinc-100 bg-zinc-50 p-5">
-                <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-3">Free plan</p>
-                <p className="text-sm text-zinc-600 leading-relaxed mb-4">
-                  Unlock full feedback, adaptive follow-ups, and 7 Countdown Kit documents.
-                </p>
-                <Link
-                  href="/pricing"
-                  className="inline-flex items-center justify-center w-full h-9 rounded-full bg-foreground text-background text-xs font-medium hover:opacity-80 transition-opacity gap-1.5"
-                >
-                  Get Interview Pack — $17 <ArrowRight className="w-3 h-3" />
-                </Link>
-              </div>
-            )}
-
-            {!loading && data?.plan === "pack" && (
-              <div className="rounded-2xl border border-zinc-200 bg-white p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-medium uppercase tracking-widest text-zinc-400">Interview Pack</p>
-                  <span className="text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-full">Active</span>
-                </div>
-                {data?.pack_expires_at && (
-                  <p className="text-sm text-zinc-500 leading-relaxed">
-                    Valid until{" "}
-                    <span className="font-medium text-foreground">
-                      {new Date(data.pack_expires_at).toLocaleDateString("en-US", { month: "long", day: "numeric" })}
-                    </span>
-                  </p>
-                )}
-              </div>
-            )}
-
-            {!loading && data?.plan === "admin" && (
-              <div className="rounded-2xl border border-zinc-100 p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-medium uppercase tracking-widest text-zinc-400">Plan</p>
-                  <span className="text-xs font-medium bg-zinc-900 text-white px-2.5 py-0.5 rounded-full">Admin</span>
-                </div>
-                <div className="space-y-2">
-                  {["All companies", "Unlimited sessions", "Full feedback", "Countdown Kit"].map((f) => (
-                    <div key={f} className="flex items-center gap-2">
-                      <div className="w-1 h-1 rounded-full bg-zinc-300 flex-shrink-0" />
-                      <p className="text-xs text-zinc-500">{f}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

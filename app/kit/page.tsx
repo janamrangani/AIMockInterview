@@ -1,22 +1,17 @@
 "use client";
-// app/kit/page.tsx — Interview Countdown Kit
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import {
   Briefcase, Mic, HelpCircle, BookMarked, Mail, Banknote,
-  ClipboardList, Copy, Check, Loader2, ChevronDown, type LucideIcon,
+  ClipboardList, Copy, Check, Loader2, ChevronDown, ArrowRight,
+  type LucideIcon,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -124,11 +119,11 @@ function getSupabase() {
   );
 }
 
-// ── Output renderer — preserves newlines ──────────────────────────────────────
+// ── Output block ──────────────────────────────────────────────────────────────
 
 function OutputBlock({ text }: { text: string }) {
   return (
-    <div className="mt-4 rounded-xl border border-border bg-muted/30 p-4 text-sm leading-relaxed whitespace-pre-wrap font-mono text-foreground">
+    <div className="mt-4 rounded-xl border border-zinc-100 bg-zinc-50 p-4 text-sm leading-relaxed whitespace-pre-wrap font-mono text-foreground">
       {text}
     </div>
   );
@@ -151,66 +146,59 @@ function DocCard({
   onGenerate: () => void;
   onCopy: () => void;
 }) {
-  const { Icon, title, desc, inputLabel, inputPlaceholder, inputHint, type } = doc;
+  const { Icon, title, desc, inputLabel, inputPlaceholder, inputHint } = doc;
 
   return (
     <div className={cn(
-      "rounded-xl border border-border bg-white transition-shadow duration-150",
+      "rounded-xl border border-zinc-100 bg-white transition-shadow duration-150",
       state.open && "shadow-sm"
     )}>
-      {/* Header — always visible */}
       <button
         onClick={onToggle}
         className="w-full flex items-center gap-4 px-5 py-4 text-left"
       >
-        <div className="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
-          <Icon className="w-4 h-4" />
+        <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center flex-shrink-0">
+          <Icon className="w-3.5 h-3.5 text-zinc-600" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm">{title}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+          <p className="text-xs text-zinc-400 mt-0.5">{desc}</p>
         </div>
         {state.output && !state.open && (
           <span className="text-xs text-emerald-600 font-medium flex-shrink-0">Generated</span>
         )}
         <ChevronDown className={cn(
-          "w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform duration-150",
+          "w-4 h-4 text-zinc-400 flex-shrink-0 transition-transform duration-150",
           state.open && "rotate-180"
         )} />
       </button>
 
-      {/* Expanded body */}
       {state.open && (
-        <div className="px-5 pb-5 border-t border-border pt-4 space-y-4">
-          {/* Input */}
+        <div className="px-5 pb-5 border-t border-zinc-100 pt-4 space-y-4">
           {inputLabel && (
             <div className="space-y-1.5">
               <label className="text-sm font-medium">{inputLabel}</label>
               {inputHint && (
-                <p className="text-xs text-muted-foreground">{inputHint}</p>
+                <p className="text-xs text-zinc-400">{inputHint}</p>
               )}
               <textarea
                 value={state.input}
                 onChange={(e) => onInputChange(e.target.value)}
                 placeholder={inputPlaceholder ?? ""}
                 rows={4}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-900 placeholder:text-zinc-400"
               />
             </div>
           )}
 
-          {/* Generate button */}
           <button
             onClick={onGenerate}
             disabled={state.loading || (!!inputLabel && !state.input.trim())}
-            className={cn(
-              buttonVariants({ size: "sm" }),
-              "disabled:opacity-50 disabled:cursor-not-allowed"
-            )}
+            className="inline-flex items-center gap-1.5 h-9 px-5 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
           >
             {state.loading ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 Generating…
               </>
             ) : state.output ? (
@@ -220,21 +208,16 @@ function DocCard({
             )}
           </button>
 
-          {/* Error */}
           {state.error && (
-            <p className="text-xs text-destructive">{state.error}</p>
+            <p className="text-xs text-red-500">{state.error}</p>
           )}
 
-          {/* Output */}
           {state.output && (
             <div>
               <OutputBlock text={state.output} />
               <button
                 onClick={onCopy}
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "sm" }),
-                  "mt-2 gap-1.5"
-                )}
+                className="inline-flex items-center gap-1.5 mt-2 h-8 px-4 rounded-full border border-zinc-200 text-xs font-medium hover:bg-zinc-50 transition-colors"
               >
                 {state.copied ? (
                   <><Check className="w-3.5 h-3.5 text-emerald-600" /> Copied</>
@@ -333,100 +316,111 @@ export default function KitPage() {
 
   if (authLoading) {
     return (
-      <main className="max-w-2xl mx-auto px-6 py-16">
-        <div className="space-y-3">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-[72px] rounded-xl border border-border bg-muted/30 animate-pulse" />
-          ))}
+      <div className="min-h-screen bg-white">
+        <div className="max-w-4xl mx-auto px-6 py-12">
+          <div className="h-10 w-64 bg-zinc-100 rounded-lg animate-pulse mb-10" />
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-16 rounded-xl border border-zinc-100 bg-zinc-50 animate-pulse" />
+            ))}
+          </div>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="max-w-2xl mx-auto px-6 py-16">
-      {/* Header */}
-      <div className="mb-10">
-        <div className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full mb-4 tracking-widest uppercase">
-          Interview Countdown Kit
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Seven documents. One interview.</h1>
-        <p className="text-muted-foreground">
-          Each document is generated by AI and calibrated to your company and role.
-        </p>
-      </div>
+    <div className="min-h-screen bg-white">
+      <div className="max-w-4xl mx-auto px-6 py-12">
 
-      {/* Access gate */}
-      {!isPaidUser && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 mb-8">
-          <p className="font-semibold text-sm text-amber-900 mb-1">Interview Pack required</p>
-          <p className="text-sm text-amber-800 mb-3">
-            The Countdown Kit is included in the Interview Pack ($17 one-time).
+        {/* Heading */}
+        <div className="mb-10">
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-2">Countdown Kit</p>
+          <h1 className="text-4xl font-bold tracking-tight">Seven documents. One interview.</h1>
+          <p className="text-zinc-500 mt-2 text-sm">
+            Each document is generated by AI and calibrated to your company and role.
           </p>
-          <Link href="/pricing" className={buttonVariants({ size: "sm" })}>
-            Get the Pack →
-          </Link>
         </div>
-      )}
 
-      {/* Company + role selectors */}
-      {isPaidUser && (
-        <div className="grid sm:grid-cols-2 gap-4 mb-8 p-5 rounded-xl border border-border bg-muted/20">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Company</label>
-            <Select value={companyId} onValueChange={(v) => { setCompanyId(v ?? ""); setCustomCompanyName(""); }}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a company" />
-              </SelectTrigger>
-              <SelectContent>
-                {companies.filter((c) => c.name !== "Other").map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-                <SelectItem value={otherCompany?.id ?? "other"}>Other…</SelectItem>
-              </SelectContent>
-            </Select>
-            {isOther && (
+        {/* Access gate (free plan) */}
+        {!isPaidUser && (
+          <div className="flex items-start justify-between gap-6 rounded-xl border border-zinc-200 bg-zinc-50 p-5 mb-8">
+            <div>
+              <p className="font-semibold text-sm text-foreground mb-1">Interview Pack required</p>
+              <p className="text-sm text-zinc-500">
+                The Countdown Kit is included in the Interview Pack ($17 one-time).
+              </p>
+            </div>
+            <Link
+              href="/pricing"
+              className="flex-shrink-0 inline-flex items-center gap-1.5 h-9 px-5 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-80 transition-opacity"
+            >
+              Get the Pack <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        )}
+
+        {/* Company + role setup */}
+        {isPaidUser && (
+          <div className="grid sm:grid-cols-2 gap-4 mb-8 p-5 rounded-xl border border-zinc-100 bg-zinc-50">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Company</label>
+              <Select value={companyId} onValueChange={(v) => { setCompanyId(v ?? ""); setCustomCompanyName(""); }}>
+                <SelectTrigger className="border-zinc-200 bg-white rounded-lg">
+                  <SelectValue placeholder="Select a company" />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.filter((c) => c.name !== "Other").map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                  <SelectItem value={otherCompany?.id ?? "other"}>Other…</SelectItem>
+                </SelectContent>
+              </Select>
+              {isOther && (
+                <Input
+                  value={customCompanyName}
+                  onChange={(e) => setCustomCompanyName(e.target.value)}
+                  placeholder="Company name (e.g. Palantir, Snowflake)"
+                  className="border-zinc-200 rounded-lg"
+                  autoFocus
+                />
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Role</label>
               <Input
-                value={customCompanyName}
-                onChange={(e) => setCustomCompanyName(e.target.value)}
-                placeholder="Company name (e.g. Palantir, Snowflake)"
-                autoFocus
-              />
-            )}
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Role</label>
-            <Input
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              placeholder="e.g. Senior SWE, Product Manager"
-            />
-          </div>
-          {!ready && (
-            <p className="text-xs text-muted-foreground sm:col-span-2">
-              Select a company and role to unlock all documents.
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Doc cards */}
-      {isPaidUser && (
-        <div className="space-y-3">
-          {KIT_DOCS.map((doc) => (
-            <div key={doc.type} className={cn(!ready && "opacity-50 pointer-events-none")}>
-              <DocCard
-                doc={doc}
-                state={docStates[doc.type]}
-                onToggle={() => updateDoc(doc.type, { open: !docStates[doc.type].open })}
-                onInputChange={(v) => updateDoc(doc.type, { input: v })}
-                onGenerate={() => handleGenerate(doc)}
-                onCopy={() => handleCopy(doc.type)}
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                placeholder="e.g. Senior SWE, Product Manager"
+                className="border-zinc-200 bg-white rounded-lg"
               />
             </div>
-          ))}
-        </div>
-      )}
-    </main>
+            {!ready && (
+              <p className="text-xs text-zinc-400 sm:col-span-2">
+                Select a company and role to unlock all documents.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Doc cards */}
+        {isPaidUser && (
+          <div className="space-y-2">
+            {KIT_DOCS.map((doc) => (
+              <div key={doc.type} className={cn(!ready && "opacity-50 pointer-events-none")}>
+                <DocCard
+                  doc={doc}
+                  state={docStates[doc.type]}
+                  onToggle={() => updateDoc(doc.type, { open: !docStates[doc.type].open })}
+                  onInputChange={(v) => updateDoc(doc.type, { input: v })}
+                  onGenerate={() => handleGenerate(doc)}
+                  onCopy={() => handleCopy(doc.type)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

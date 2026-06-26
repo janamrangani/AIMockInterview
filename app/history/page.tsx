@@ -1,12 +1,9 @@
 "use client";
-// app/history/page.tsx
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
-import { Trash2 } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Trash2, ChevronRight, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import CompanyLogo from "@/app/components/company-logo";
 
@@ -41,26 +38,13 @@ function avgScore(feedback: SessionRow["feedback"]): number | null {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function ScoreBadge({ score }: { score: number }) {
-  const bg =
-    score >= 7
-      ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200"
-      : score >= 5
-      ? "bg-amber-100 text-amber-700 ring-1 ring-amber-200"
-      : "bg-red-100 text-red-700 ring-1 ring-red-200";
-
-  return (
-    <div className={cn("flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums", bg)}>
-      {score}/10
-    </div>
-  );
+function scoreColor(score: number) {
+  if (score >= 7) return "text-emerald-600";
+  if (score >= 5) return "text-amber-500";
+  return "text-red-500";
 }
 
 export default function HistoryPage() {
@@ -90,131 +74,151 @@ export default function HistoryPage() {
     const supabase = getSupabase();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
-
     await fetch("/api/sessions/delete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId, accessToken: session.access_token }),
     });
-
     setSessions((prev) => prev.filter((s) => s.id !== sessionId));
     setConfirmDelete(null);
     setDeleting(null);
   }
 
   return (
-    <main className="max-w-2xl mx-auto px-6 py-16">
-      <div className="flex items-center justify-between gap-4 mb-8">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight mb-1">Session history</h1>
-          {!loading && (
-            <p className="text-muted-foreground text-sm">
-              {sessions.length} session{sessions.length !== 1 ? "s" : ""}
-            </p>
+    <div className="min-h-screen bg-white">
+      <div className="max-w-5xl mx-auto px-6 py-12">
+
+        {/* Heading */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-2">Your sessions</p>
+            <h1 className="text-4xl font-bold tracking-tight">Session history.</h1>
+          </div>
+          {!loading && sessions.length > 0 && (
+            <Link
+              href="/start"
+              className="flex-shrink-0 inline-flex items-center gap-2 h-11 px-6 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-80 transition-opacity"
+            >
+              New interview <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           )}
         </div>
+
+        {/* Loading skeleton */}
+        {loading && (
+          <div className="rounded-2xl border border-zinc-100 overflow-hidden divide-y divide-zinc-100">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-5 py-4">
+                <div className="w-9 h-9 rounded-xl bg-zinc-100 animate-pulse flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-32 bg-zinc-100 rounded animate-pulse" />
+                  <div className="h-2.5 w-48 bg-zinc-100 rounded animate-pulse" />
+                </div>
+                <div className="h-3 w-12 bg-zinc-100 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && sessions.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-zinc-200 px-8 py-20 text-center">
+            <p className="font-medium text-foreground mb-1">No sessions yet</p>
+            <p className="text-sm text-zinc-500 mb-6">Complete your first mock interview to see it here.</p>
+            <Link
+              href="/start"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:underline underline-offset-4"
+            >
+              Start your first interview <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        )}
+
+        {/* Session list */}
         {!loading && sessions.length > 0 && (
-          <Link href="/start" className={buttonVariants() + " flex-shrink-0"}>
-            New interview →
-          </Link>
+          <>
+            <p className="text-xs text-zinc-400 mb-3">{sessions.length} session{sessions.length !== 1 ? "s" : ""}</p>
+            <div className="rounded-2xl border border-zinc-100 overflow-hidden divide-y divide-zinc-100">
+              {sessions.map((s) => {
+                const score = avgScore(s.feedback);
+                const name = companyName(s);
+                const href = s.status === "completed" ? `/review/${s.id}` : `/session/${s.id}`;
+                const isConfirming = confirmDelete === s.id;
+                const isDeleting = deleting === s.id;
+
+                return (
+                  <div key={s.id} className="relative group">
+
+                    {/* Delete confirm overlay */}
+                    {isConfirming && (
+                      <div className="absolute inset-0 z-10 flex items-center justify-center gap-3 bg-white border-b border-zinc-100 px-5">
+                        <p className="text-sm font-medium text-foreground flex-1">Delete this session?</p>
+                        <button
+                          onClick={() => handleDelete(s.id)}
+                          disabled={isDeleting}
+                          className="px-4 py-1.5 rounded-full bg-red-500 text-white text-xs font-medium hover:bg-red-600 disabled:opacity-60 transition-colors"
+                        >
+                          {isDeleting ? "Deleting…" : "Delete"}
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelete(null)}
+                          className="px-4 py-1.5 rounded-full border border-zinc-200 text-xs font-medium hover:bg-zinc-50 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-4 px-5 py-4 bg-white hover:bg-zinc-50 transition-colors">
+                      <Link href={href} className="flex items-center gap-4 flex-1 min-w-0">
+                        <CompanyLogo name={name} size="md" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="font-semibold text-sm text-foreground truncate">{name}</span>
+                            {s.status === "in_progress" && (
+                              <span className="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full flex-shrink-0">
+                                In progress
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-zinc-400">
+                            {s.role}
+                            {s.question_count > 0 && ` · ${s.question_count} question${s.question_count !== 1 ? "s" : ""}`}
+                          </p>
+                        </div>
+                      </Link>
+
+                      <div className="flex items-center gap-4 flex-shrink-0">
+                        <p className="text-xs text-zinc-400 hidden sm:block">{formatDate(s.started_at)}</p>
+
+                        {score !== null ? (
+                          <span className={cn("text-sm font-bold tabular-nums", scoreColor(score))}>
+                            {score}/10
+                          </span>
+                        ) : (
+                          <span className="text-xs text-zinc-300">—</span>
+                        )}
+
+                        <button
+                          onClick={() => setConfirmDelete(s.id)}
+                          className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-50 text-zinc-300 hover:text-red-400 transition-all"
+                          title="Delete session"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+
+                        <Link href={href}>
+                          <ChevronRight className="w-4 h-4 text-zinc-300 group-hover:text-zinc-500 transition-colors" />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
-
-      {loading && (
-        <div className="space-y-3">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-[72px] rounded-xl border border-border bg-muted/30 animate-pulse" />
-          ))}
-        </div>
-      )}
-
-      {!loading && sessions.length === 0 && (
-        <div className="text-center py-20 text-muted-foreground">
-          <p className="text-lg font-medium mb-2">No sessions yet</p>
-          <p className="text-sm mb-6">Complete your first interview to see it here.</p>
-          <Link href="/start" className={buttonVariants({ variant: "outline" })}>
-            Start your first interview →
-          </Link>
-        </div>
-      )}
-
-      {!loading && sessions.length > 0 && (
-        <div className="space-y-2.5">
-          {sessions.map((s) => {
-            const score = avgScore(s.feedback);
-            const name = companyName(s);
-            const questionCount = s.question_count;
-            const isConfirming = confirmDelete === s.id;
-            const isDeleting = deleting === s.id;
-
-            return (
-              <div key={s.id} className="relative group">
-                {/* Confirm delete overlay */}
-                {isConfirming && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4">
-                    <p className="text-sm font-medium text-red-800">Delete this session?</p>
-                    <button
-                      onClick={() => handleDelete(s.id)}
-                      disabled={isDeleting}
-                      className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 disabled:opacity-60"
-                    >
-                      {isDeleting ? "Deleting…" : "Yes, delete"}
-                    </button>
-                    <button
-                      onClick={() => setConfirmDelete(null)}
-                      className="px-3 py-1.5 rounded-lg border border-border bg-white text-xs font-semibold hover:bg-muted"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-border bg-white hover:border-indigo-200 hover:shadow-sm hover:shadow-indigo-50 transition-all duration-150">
-
-                  <Link href={s.status === "completed" ? `/review/${s.id}` : `/session/${s.id}`} className="flex items-center gap-4 flex-1 min-w-0">
-                    <CompanyLogo name={name} size="md" />
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                        <span className="font-semibold text-sm">{name}</span>
-                        <span className="text-muted-foreground text-sm truncate">· {s.role}</span>
-                        {s.status === "in_progress" && (
-                          <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs py-0 px-1.5">
-                            In progress
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(s.started_at)}
-                        {questionCount > 0 && ` · ${questionCount} question${questionCount !== 1 ? "s" : ""}`}
-                      </p>
-                    </div>
-                  </Link>
-
-                  {/* Score + arrow + delete */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {score !== null ? (
-                      <ScoreBadge score={score} />
-                    ) : (
-                      <span className="text-xs text-muted-foreground">No score</span>
-                    )}
-                    <Link href={s.status === "completed" ? `/review/${s.id}` : `/session/${s.id}`}>
-                      <span className="text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all text-sm px-1">→</span>
-                    </Link>
-                    <button
-                      onClick={() => setConfirmDelete(s.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-50 hover:text-red-500 text-muted-foreground"
-                      title="Delete session"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </main>
+    </div>
   );
 }

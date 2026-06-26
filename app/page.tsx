@@ -103,7 +103,7 @@ export default function Home() {
     <div className="flex flex-col flex-1">
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <section className="bg-white px-6 pt-20 pb-16">
+      <section className="bg-white px-6 pt-12 sm:pt-20 pb-12 sm:pb-16">
         <div className="max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 border border-zinc-200 text-zinc-500 text-xs font-medium px-3.5 py-1.5 rounded-full mb-8">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -118,7 +118,7 @@ export default function Home() {
             Real questions calibrated to your target company, AI that follows up like a real interviewer, and honest feedback — so you walk in knowing exactly what to say.
           </p>
 
-          <div className="flex items-center gap-3 flex-wrap mb-16">
+          <div className="flex items-center gap-3 flex-wrap mb-10 sm:mb-16">
             <Link
               href="/pricing"
               className="inline-flex items-center h-11 px-6 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-80 transition-opacity"
@@ -318,7 +318,7 @@ export default function Home() {
               </ul>
             </div>
 
-            <div className="rounded-2xl border border-zinc-900 bg-zinc-950 p-6">
+            <div className="rounded-2xl border border-foreground/20 bg-foreground p-6">
               <div className="flex items-center gap-3 mb-5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <p className="font-semibold text-sm text-white">InterviewAI</p>
@@ -330,7 +330,7 @@ export default function Home() {
                   "Scored feedback with specific improvement points",
                   "Available now, in your browser, for $17",
                 ].map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-sm text-zinc-300">
+                  <li key={item} className="flex items-start gap-2 text-sm text-white/75">
                     <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
                     {item}
                   </li>
