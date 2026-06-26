@@ -1,6 +1,6 @@
 -- AI Mock Interview — Supabase schema
 -- Single authoritative source of truth. Run in the Supabase SQL editor.
--- Safe to re-run: uses IF NOT EXISTS / ON CONFLICT DO NOTHING throughout.
+-- Safe to re-run: uses IF NOT EXISTS / DROP IF EXISTS / ON CONFLICT DO NOTHING throughout.
 
 -- ── Companies ─────────────────────────────────────────────────────────────────
 create table if not exists companies (
@@ -25,6 +25,8 @@ create table if not exists profiles (
 
 alter table profiles enable row level security;
 
+drop policy if exists "Users can view own profile"   on profiles;
+drop policy if exists "Users can update own profile" on profiles;
 create policy "Users can view own profile"   on profiles for select  using (auth.uid() = id);
 create policy "Users can update own profile" on profiles for update  using (auth.uid() = id) with check (auth.uid() = id);
 
@@ -43,6 +45,9 @@ create table if not exists user_resumes (
 
 alter table user_resumes enable row level security;
 
+drop policy if exists "Users can view own resumes"   on user_resumes;
+drop policy if exists "Users can insert own resumes" on user_resumes;
+drop policy if exists "Users can delete own resumes" on user_resumes;
 create policy "Users can view own resumes"   on user_resumes for select using (auth.uid() = user_id);
 create policy "Users can insert own resumes" on user_resumes for insert with check (auth.uid() = user_id);
 create policy "Users can delete own resumes" on user_resumes for delete using (auth.uid() = user_id);
@@ -51,20 +56,24 @@ create index if not exists idx_user_resumes_user on user_resumes(user_id, create
 
 -- ── Sessions ──────────────────────────────────────────────────────────────────
 create table if not exists sessions (
-  id                 uuid primary key default gen_random_uuid(),
-  user_id            uuid not null references auth.users(id) on delete cascade,
-  company_id         uuid not null references companies(id),
-  role               text not null,
-  status             text not null default 'in_progress' check (status in ('in_progress', 'completed')),
+  id                  uuid primary key default gen_random_uuid(),
+  user_id             uuid not null references auth.users(id) on delete cascade,
+  company_id          uuid not null references companies(id),
+  role                text not null,
+  status              text not null default 'in_progress' check (status in ('in_progress', 'completed')),
   custom_company_name text,           -- display name when company is "Other"
-  question_count     int not null default 0,
-  duration_seconds   int,             -- set on session completion
-  started_at         timestamptz default now(),
-  completed_at       timestamptz
+  question_count      int not null default 0,
+  duration_seconds    int,            -- set on session completion
+  started_at          timestamptz default now(),
+  completed_at        timestamptz
 );
 
 alter table sessions enable row level security;
 
+drop policy if exists "Users can view own sessions"   on sessions;
+drop policy if exists "Users can insert own sessions" on sessions;
+drop policy if exists "Users can update own sessions" on sessions;
+drop policy if exists "Users can delete own sessions" on sessions;
 create policy "Users can view own sessions"   on sessions for select using (auth.uid() = user_id);
 create policy "Users can insert own sessions" on sessions for insert with check (auth.uid() = user_id);
 create policy "Users can update own sessions" on sessions for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
@@ -85,6 +94,9 @@ create table if not exists questions (
 
 alter table questions enable row level security;
 
+drop policy if exists "Users can view own questions"   on questions;
+drop policy if exists "Users can insert own questions" on questions;
+drop policy if exists "Users can update own questions" on questions;
 create policy "Users can view own questions"   on questions for select using (
   exists (select 1 from sessions s where s.id = questions.session_id and s.user_id = auth.uid())
 );
@@ -111,6 +123,8 @@ create table if not exists answers (
 
 alter table answers enable row level security;
 
+drop policy if exists "Users can view own answers"   on answers;
+drop policy if exists "Users can insert own answers" on answers;
 create policy "Users can view own answers" on answers for select using (
   exists (
     select 1 from questions q
@@ -142,6 +156,8 @@ create table if not exists feedback (
 
 alter table feedback enable row level security;
 
+drop policy if exists "Users can view own feedback"   on feedback;
+drop policy if exists "Users can insert own feedback" on feedback;
 create policy "Users can view own feedback" on feedback for select using (
   exists (select 1 from sessions s where s.id = feedback.session_id and s.user_id = auth.uid())
 );
@@ -171,6 +187,8 @@ create table if not exists generated_documents (
 
 alter table generated_documents enable row level security;
 
+drop policy if exists "Users can view own generated documents"   on generated_documents;
+drop policy if exists "Users can insert own generated documents" on generated_documents;
 create policy "Users can view own generated documents"   on generated_documents for select using (auth.uid() = user_id);
 create policy "Users can insert own generated documents" on generated_documents for insert with check (auth.uid() = user_id);
 
@@ -190,6 +208,7 @@ create table if not exists payment_history (
 
 alter table payment_history enable row level security;
 
+drop policy if exists "Users can view own payment history" on payment_history;
 create policy "Users can view own payment history" on payment_history for select using (auth.uid() = user_id);
 
 create index if not exists idx_payment_history_user on payment_history(user_id, created_at desc);
